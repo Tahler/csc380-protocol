@@ -29,7 +29,9 @@ public class Server {
             while (true) {
                 Socket client = server.accept();
                 System.out.println("Accepted connection");
-                this.handleClient(client);
+
+                Thread handler = new Thread(() -> this.handleClient(client));
+                handler.start();
             }
         } catch (IOException e) {
             System.err.println("Failed to start server on port 3000.");
