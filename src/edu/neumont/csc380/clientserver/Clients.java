@@ -11,16 +11,16 @@ import java.util.List;
 import java.util.Random;
 
 public class Clients {
-//    private List<String> keys;
-//
-//    public Clients() {
-//        this.keys = new ArrayList<>();
-//    }
+    private List<String> keys;
+
+    public Clients() {
+        this.keys = new ArrayList<>();
+    }
 
     /**
      * @return The number of items in the HallaStor.
      */
-    public static int fillServer() {
+    public int fillServer() {
         Random random = new Random();
         final TypedObject driver = new TypedObject<>(TypedObject.Type.DRIVER, new Driver(123, "Mike", 40, true));
         final TypedObject racecar = new TypedObject<>(TypedObject.Type.RACECAR, new Racecar(12, "Porsche", "Cayman", 35000, 60));
@@ -38,14 +38,14 @@ public class Clients {
             responseType = response.getType();
             if (responseType == Response.Type.PUT_SUCCESS) {
                 i += 1;
-//                this.keys.add(key);
+                this.keys.add(key);
             }
         } while (responseType == Response.Type.PUT_SUCCESS); // responseType != Response.Type.SERVER_FULL);
 
         return i;
     }
 
-    public static void performUpdates(final String keyToUpdate, final int numUpdates) {
+    public void performUpdates(final int numUpdates) {
         List<Observable<Void>> updates = new ArrayList<>(numUpdates);
 
         for (int i = 0; i < numUpdates; i++) {
@@ -53,16 +53,11 @@ public class Clients {
 
             Observable<Void> update = Observable.create(subscriber -> {
                 new Thread(() -> {
-                    System.out.println(ii+ ": starting");
-                    Client client = new Client();
+                    System.out.println(ii + " started.");
 
-                    // Get
-                    TypedObject value = client.getObjectFromServer(keyToUpdate);
-                    System.out.println(ii + ": got " + value);
+                    this.updateRandomKey();
 
-                    // Update
-                    client.updateObjectOnServer(keyToUpdate, value);
-
+                    System.out.println(ii + " done.");
                     // Finish
                     subscriber.onCompleted();
                 }).start();
@@ -72,42 +67,39 @@ public class Clients {
         Observable.merge(updates).toBlocking().subscribe();
     }
 
-//    public static long updateRandomKey() {
-//        Random random = new Random();
-//        this.keys.get()
-//        long startTime = System.currentTimeMillis();
-//
-//        Client client = new Client();
-//        TypedObject value = client.getObjectFromServer(keyToUpdate);
-//        switch (value.getType()) {
-//            case DRIVER:
-//                Driver driver = (Driver) value.getData();
-//                driver.setAge(driver.getAge() + 1);
-//                break;
-//            case RACECAR:
-//                Racecar racecar = (Racecar) value.getData();
-//                racecar.setHorsePower(racecar.getHorsePower() + 1);
-//                break;
-//            default:
-//                throw new RuntimeException("Impossible type: " + value.getType());
-//        }
-//        // Ignoring response
-//        client.updateObjectOnServer(keyToUpdate, value);
-//
-//        long endTime = System.currentTimeMillis();
-//        return endTime - startTime;
-//    }
+    public void updateRandomKey() {
+        Random random = new Random();
+        int randomIndex = random.nextInt(this.keys.size());
+        String randomKey = this.keys.get(randomIndex);
+
+        Client client = new Client();
+        TypedObject value = client.getObjectFromServer(randomKey);
+        switch (value.getType()) {
+            case DRIVER:
+                Driver driver = (Driver) value.getData();
+                driver.setAge(driver.getAge() + 1);
+                break;
+            case RACECAR:
+                Racecar racecar = (Racecar) value.getData();
+                racecar.setHorsePower(racecar.getHorsePower() + 1);
+                break;
+            default:
+                throw new RuntimeException("Impossible type: " + value.getType());
+        }
+        // Ignoring response
+        client.updateObjectOnServer(randomKey, value);
+    }
 
     public static void main(String[] args) {
         final int numUpdates = 100;
 
-        int numItems = fillServer();
+        Clients clients = new Clients();
+
+        int numItems = clients.fillServer();
         System.out.println("Filled server with " + numItems + " items.");
 
-        String key = (numItems - 1) + "";
-
         long startTime = System.currentTimeMillis();
-        performUpdates(key, numUpdates);
+        clients.performUpdates(numUpdates);
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
 
