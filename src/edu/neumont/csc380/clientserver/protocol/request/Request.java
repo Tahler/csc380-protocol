@@ -20,6 +20,7 @@ public abstract class Request {
     public enum Type {
         GET,
         PUT,
+        LOCK,
         UPDATE,
         DELETE
     }

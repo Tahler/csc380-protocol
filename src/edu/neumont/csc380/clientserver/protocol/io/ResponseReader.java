@@ -36,6 +36,9 @@ public class ResponseReader {
             case DELETE_SUCCESS:
                 subClass = DeleteSuccessResponse.class;
                 break;
+            case LOCK_SUCCESS:
+                subClass = LockSuccessResponse.class;
+                break;
             case INVALID_REQUEST:
                 subClass = InvalidRequestResponse.class;
                 break;
@@ -47,6 +50,12 @@ public class ResponseReader {
                 break;
             case KEY_ALREADY_EXISTS:
                 subClass = KeyAlreadyExistsResponse.class;
+                break;
+            case KEY_LOCKED:
+                subClass = KeyIsLockedResponse.class;
+                break;
+            case KEY_NOT_LOCKED:
+                subClass = KeyNotLockedResponse.class;
                 break;
             case SERVER_FULL:
                 subClass = ServerFullResponse.class;

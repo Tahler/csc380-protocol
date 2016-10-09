@@ -2,7 +2,6 @@ package edu.neumont.csc380.clientserver.protocol.io;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import edu.neumont.csc380.clientserver.models.TypedObject;
 import edu.neumont.csc380.clientserver.protocol.request.*;
 
 import java.io.InputStream;
@@ -29,6 +28,9 @@ public class RequestReader {
                 break;
             case PUT:
                 subClass = PutRequest.class;
+                break;
+            case LOCK:
+                subClass = LockRequest.class;
                 break;
             case UPDATE:
                 subClass = UpdateRequest.class;

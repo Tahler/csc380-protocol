@@ -49,31 +49,27 @@ public class Clients {
         List<Observable<Void>> updates = new ArrayList<>(numUpdates);
 
         for (int i = 0; i < numUpdates; i++) {
-            final int ii = i;
-
-            Observable<Void> update = Observable.create(subscriber -> {
+            Observable<Void> update = Observable.create(subscriber ->
                 new Thread(() -> {
-                    System.out.println(ii + " started.");
+                    String key = this.getRandomKey();
+                    this.updateKey(key);
 
-                    this.updateRandomKey();
-
-                    System.out.println(ii + " done.");
-                    // Finish
                     subscriber.onCompleted();
-                }).start();
-            });
+                }).start());
             updates.add(update);
         }
         Observable.merge(updates).toBlocking().subscribe();
     }
 
-    public void updateRandomKey() {
+    private String getRandomKey() {
         Random random = new Random();
         int randomIndex = random.nextInt(this.keys.size());
-        String randomKey = this.keys.get(randomIndex);
+        return this.keys.get(randomIndex);
+    }
 
+    public void updateKey(String key) {
         Client client = new Client();
-        TypedObject value = client.getObjectFromServer(randomKey);
+        TypedObject value = client.getObjectFromServer(key);
         switch (value.getType()) {
             case DRIVER:
                 Driver driver = (Driver) value.getData();
@@ -86,8 +82,7 @@ public class Clients {
             default:
                 throw new RuntimeException("Impossible type: " + value.getType());
         }
-        // Ignoring response
-        client.updateObjectOnServer(randomKey, value);
+        client.updateObjectOnServer(key, value);
     }
 
     public static void main(String[] args) {

@@ -16,12 +16,15 @@ public abstract class Response {
         PUT_SUCCESS,
         UPDATE_SUCCESS,
         DELETE_SUCCESS,
+        LOCK_SUCCESS,
 
         INVALID_REQUEST,
         INVALID_KEY,
 
         KEY_DOES_NOT_EXIST,
         KEY_ALREADY_EXISTS,
+        KEY_LOCKED,
+        KEY_NOT_LOCKED,
 
         SERVER_FULL
     }
