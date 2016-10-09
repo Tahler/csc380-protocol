@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class Client {
-    private Response makeRequest(Request request) {
+    private static Response makeRequest(Request request) {
         try (
                 Socket connection = new Socket(Protocol.HOST, Protocol.PORT)
         ) {
@@ -28,28 +28,20 @@ public class Client {
         }
     }
 
-    private Response makeRequestUntilNotLocked(Request request) {
-        Response response = null;
+    private static Response makeRequestUntilNotLocked(Request request) {
+        Response response;
         do {
-//            if (response != null) {
-//                // TODO: dumb
-////                try {
-////                    Thread.sleep(100);
-////                } catch (InterruptedException e) {
-////                    e.printStackTrace();
-////                }
-//            }
-            response = this.makeRequest(request);
+            response = makeRequest(request);
         } while (response.getType() == Response.Type.KEY_LOCKED);
         return response;
     }
 
-    public Response putObjectOnServer(String key, TypedObject value) {
-        return this.makeRequest(new PutRequest(key, value));
+    public static Response putObjectOnServer(String key, TypedObject value) {
+        return makeRequest(new PutRequest(key, value));
     }
 
-    public TypedObject getObjectFromServer(String key) {
-        Response response = this.makeRequestUntilNotLocked(new GetRequest(key));
+    public static TypedObject getObjectFromServer(String key) {
+        Response response = makeRequestUntilNotLocked(new GetRequest(key));
 
         if (response.getType() == Response.Type.GET_SUCCESS) {
             GetSuccessResponse responseWithValue = (GetSuccessResponse) response;
@@ -60,14 +52,14 @@ public class Client {
         }
     }
 
-    public Response updateObjectOnServer(String key, TypedObject value) {
+    public static Response updateObjectOnServer(String key, TypedObject value) {
         // Lock the item first
-        this.makeRequestUntilNotLocked(new LockRequest(key));
+        makeRequestUntilNotLocked(new LockRequest(key));
         // Abort if lock not obtained, otherwise send update request
-        return this.makeRequest(new UpdateRequest(key, value));
+        return makeRequest(new UpdateRequest(key, value));
     }
 
-    public Response deleteObjectOnServer(String key) {
-        return this.makeRequest(new DeleteRequest(key));
+    public static Response deleteObjectOnServer(String key) {
+        return makeRequest(new DeleteRequest(key));
     }
 }

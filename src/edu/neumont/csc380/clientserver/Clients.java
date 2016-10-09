@@ -68,8 +68,7 @@ public class Clients {
     }
 
     public void updateKey(String key) {
-        Client client = new Client();
-        TypedObject value = client.getObjectFromServer(key);
+        TypedObject value = Client.getObjectFromServer(key);
         switch (value.getType()) {
             case DRIVER:
                 Driver driver = (Driver) value.getData();
@@ -82,7 +81,7 @@ public class Clients {
             default:
                 throw new RuntimeException("Impossible type: " + value.getType());
         }
-        client.updateObjectOnServer(key, value);
+        Client.updateObjectOnServer(key, value);
     }
 
     public static void main(String[] args) {
