@@ -86,8 +86,12 @@ public class Clients {
             default:
                 throw new RuntimeException("Impossible type: " + value.getType());
         }
-        // Ignoring response
-        client.updateObjectOnServer(randomKey, value);
+        // TODO: this is dumb.
+        boolean keepTrying = true;
+        while (keepTrying) {
+            Response response = client.updateObjectOnServer(randomKey, value);
+            keepTrying = response.getType() == Response.Type.KEY_LOCKED;
+        }
     }
 
     public static void main(String[] args) {

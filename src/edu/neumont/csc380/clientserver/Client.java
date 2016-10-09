@@ -28,12 +28,28 @@ public class Client {
         }
     }
 
+    private Response makeRequestUntilNotLocked(Request request) {
+        Response response = null;
+        do {
+//            if (response != null) {
+//                // TODO: dumb
+////                try {
+////                    Thread.sleep(100);
+////                } catch (InterruptedException e) {
+////                    e.printStackTrace();
+////                }
+//            }
+            response = this.makeRequest(request);
+        } while (response.getType() == Response.Type.KEY_LOCKED);
+        return response;
+    }
+
     public Response putObjectOnServer(String key, TypedObject value) {
         return this.makeRequest(new PutRequest(key, value));
     }
 
     public TypedObject getObjectFromServer(String key) {
-        Response response = this.makeRequest(new GetRequest(key));
+        Response response = this.makeRequestUntilNotLocked(new GetRequest(key));
 
         if (response.getType() == Response.Type.GET_SUCCESS) {
             GetSuccessResponse responseWithValue = (GetSuccessResponse) response;
@@ -44,8 +60,11 @@ public class Client {
         }
     }
 
-    public Response updateObjectOnServer(String keyToUpdate, TypedObject value) {
-        return this.makeRequest(new UpdateRequest(keyToUpdate, value));
+    public Response updateObjectOnServer(String key, TypedObject value) {
+        // Lock the item first
+        this.makeRequestUntilNotLocked(new LockRequest(key));
+        // Abort if lock not obtained, otherwise send update request
+        return this.makeRequest(new UpdateRequest(key, value));
     }
 
     public Response deleteObjectOnServer(String key) {
