@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class Client {
+    private static final int MAX_WAIT_TIME = 500;
+
     private static Response makeRequest(Request request) {
         try (
                 Socket connection = new Socket(Protocol.HOST, Protocol.PORT)
@@ -30,9 +32,19 @@ public class Client {
     }
 
     private static Response makeRequestUntilNotLocked(Request request) {
+        long waitTime = 0;
         Response response;
         do {
             response = makeRequest(request);
+
+            try {
+                Thread.sleep(waitTime);
+                if (waitTime <= MAX_WAIT_TIME) {
+                    waitTime += 10;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         } while (response.getType() == Response.Type.KEY_LOCKED);
         return response;
     }

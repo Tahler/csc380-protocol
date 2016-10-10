@@ -76,7 +76,7 @@ public class Clients {
     }
 
     public static void main(String[] args) {
-        final int numUpdates = 5;
+        final int numUpdates = 100;
 
         Client.putObjectOnServer("0", new TypedObject<>(TypedObject.Type.DRIVER, new Driver(123, "Mike", 0, true)));
 
