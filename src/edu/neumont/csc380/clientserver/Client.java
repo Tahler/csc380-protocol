@@ -6,6 +6,7 @@ import edu.neumont.csc380.clientserver.protocol.io.RequestWriter;
 import edu.neumont.csc380.clientserver.protocol.io.ResponseReader;
 import edu.neumont.csc380.clientserver.protocol.request.*;
 import edu.neumont.csc380.clientserver.protocol.response.GetSuccessResponse;
+import edu.neumont.csc380.clientserver.protocol.response.LockSuccessResponse;
 import edu.neumont.csc380.clientserver.protocol.response.Response;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class Client {
         return makeRequest(new PutRequest(key, value));
     }
 
-    public static TypedObject getObjectFromServer(String key) {
+    public static TypedObject getObjectOnServer(String key) {
         Response response = makeRequestUntilNotLocked(new GetRequest(key));
 
         if (response.getType() == Response.Type.GET_SUCCESS) {
@@ -52,10 +53,19 @@ public class Client {
         }
     }
 
+    public static TypedObject getAndLockObjectOnServer(String key) {
+        Response response = makeRequestUntilNotLocked(new LockRequest(key));
+
+        if (response.getType() == Response.Type.LOCK_SUCCESS) {
+            LockSuccessResponse responseWithValue = (LockSuccessResponse) response;
+
+            return Protocol.deserializeTypedObject(responseWithValue.getValue());
+        } else {
+            throw new RuntimeException("Server returned bad response: " + response.getType());
+        }
+    }
+
     public static Response updateObjectOnServer(String key, TypedObject value) {
-        // Lock the item first
-        makeRequestUntilNotLocked(new LockRequest(key));
-        // Abort if lock not obtained, otherwise send update request
         return makeRequest(new UpdateRequest(key, value));
     }
 

@@ -28,12 +28,10 @@ public class Clients {
         int i = 0;
         Response.Type responseType;
         do {
-            Client client = new Client();
-
             String key = i + "";
             TypedObject value = random.nextBoolean() ? driver : racecar;
 
-            Response response = client.putObjectOnServer(key, value);
+            Response response = Client.putObjectOnServer(key, value);
 
             responseType = response.getType();
             if (responseType == Response.Type.PUT_SUCCESS) {

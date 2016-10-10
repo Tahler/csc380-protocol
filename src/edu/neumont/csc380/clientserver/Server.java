@@ -29,7 +29,6 @@ public class Server {
 
             while (true) {
                 Socket client = server.accept();
-                System.out.println("Accepted connection");
 
                 Thread handler = new Thread(() -> this.handleClient(client));
                 handler.start();
@@ -127,7 +126,8 @@ public class Server {
                 response = new KeyIsLockedResponse();
             } else {
                 item.lock();
-                response = new LockSuccessResponse();
+                JsonObject value = (JsonObject) item.getValue();
+                response = new LockSuccessResponse(value);
             }
         } else {
             response = new KeyDoesNotExistResponse();
