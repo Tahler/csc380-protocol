@@ -16,29 +16,42 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-    private static final boolean SHOULD_LOCK = true;
-
+    private boolean running;
+    private boolean shouldLock;
     private HallaStor repository;
 
     public Server() {
+        this(true);
+    }
+
+    public Server(boolean shouldLock) {
+        this.running = false;
+        this.shouldLock = shouldLock;
         this.repository = HallaStor.getInstance();
     }
 
     public void start() {
-        try {
-            ServerSocket server = new ServerSocket(Protocol.PORT);
-            System.out.println("Listening on port " + Protocol.PORT);
+        new Thread(() -> {
+            try {
+                ServerSocket server = new ServerSocket(Protocol.PORT);
+                System.out.println("Listening on port " + Protocol.PORT);
 
-            while (true) {
-                Socket client = server.accept();
+                this.running = true;
+                while (this.running) {
+                    Socket client = server.accept();
 
-                Thread handler = new Thread(() -> this.handleClient(client));
-                handler.start();
+                    Thread handler = new Thread(() -> this.handleClient(client));
+                    handler.start();
+                }
+            } catch (IOException e) {
+                System.err.println("Failed to start server on port 3000.");
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            System.err.println("Failed to start server on port 3000.");
-            e.printStackTrace();
-        }
+        }).start();
+    }
+
+    public void stop() {
+        this.running = false;
     }
 
     private RepositoryItem getItem(String key) {
@@ -91,7 +104,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (SHOULD_LOCK && item.isLocked()) {
+            if (shouldLock && item.isLocked()) {
                 response = new KeyIsLockedResponse();
             } else {
                 JsonObject value = (JsonObject) item.getValue();
@@ -123,7 +136,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (SHOULD_LOCK && item.isLocked()) {
+            if (shouldLock && item.isLocked()) {
                 response = new KeyIsLockedResponse();
             } else {
                 item.lock();
@@ -140,7 +153,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (!SHOULD_LOCK || item.isLocked()) {
+            if (!shouldLock || item.isLocked()) {
                 item.setValue(value);
                 this.repository.update(key, item);
                 item.unlock();
@@ -158,7 +171,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (!SHOULD_LOCK || item.isLocked()) {
+            if (!shouldLock || item.isLocked()) {
                 this.repository.delete(key);
                 response = new DeleteSuccessResponse();
             } else {
@@ -171,7 +184,10 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        new Server().start();
+        final boolean shouldLock = true;
+
+        Server server = new Server(shouldLock);
+        server.start();
     }
 }
 
