@@ -49,7 +49,8 @@ public class Clients {
         for (int i = 0; i < numUpdates; i++) {
             Observable<Void> update = Observable.create(subscriber ->
                 new Thread(() -> {
-                    String key = this.getRandomKey();
+                    String key = "0";
+//                    String key = this.getRandomKey();
                     this.updateKey(key);
 
                     subscriber.onCompleted();
@@ -66,36 +67,34 @@ public class Clients {
     }
 
     public void updateKey(String key) {
-        TypedObject value = Client.getObjectFromServer(key);
-        switch (value.getType()) {
-            case DRIVER:
-                Driver driver = (Driver) value.getData();
-                driver.setAge(driver.getAge() + 1);
-                break;
-            case RACECAR:
-                Racecar racecar = (Racecar) value.getData();
-                racecar.setHorsePower(racecar.getHorsePower() + 1);
-                break;
-            default:
-                throw new RuntimeException("Impossible type: " + value.getType());
-        }
+        TypedObject value = Client.getAndLockObjectOnServer(key);
+
+        Driver driver = (Driver) value.getData();
+        driver.setAge(driver.getAge() + 1);
+
         Client.updateObjectOnServer(key, value);
     }
 
     public static void main(String[] args) {
-        final int numUpdates = 100;
+        final int numUpdates = 5;
 
-        Clients clients = new Clients();
-
-        int numItems = clients.fillServer();
-        System.out.println("Filled server with " + numItems + " items.");
+        Client.putObjectOnServer("0", new TypedObject<>(TypedObject.Type.DRIVER, new Driver(123, "Mike", 0, true)));
 
         long startTime = System.currentTimeMillis();
+        Clients clients = new Clients();
         clients.performUpdates(numUpdates);
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
+
+        TypedObject object = Client.getObjectOnServer("0");
+        Driver driver = (Driver) object.getData();
+        System.out.println(driver.getAge());
 
         double seconds = totalTime / 1000.0;
         System.out.println("Completed " + numUpdates + " updates in " + totalTime + " millis (" + seconds + " seconds).");
     }
 }
+
+// TODO:
+// - Logger
+// - Fully utilize Rx

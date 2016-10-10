@@ -16,6 +16,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+    private static final boolean SHOULD_LOCK = true;
+
     private HallaStor repository;
 
     public Server() {
@@ -89,7 +91,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (item.isLocked()) {
+            if (SHOULD_LOCK && item.isLocked()) {
                 response = new KeyIsLockedResponse();
             } else {
                 JsonObject value = (JsonObject) item.getValue();
@@ -101,7 +103,6 @@ public class Server {
         return response;
     }
 
-    // TODO: require lock before put?
     private Response responseForPut(String key, Object value) {
         Response response;
         if (this.repository.containsKey(key)) {
@@ -122,7 +123,7 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (item.isLocked()) {
+            if (SHOULD_LOCK && item.isLocked()) {
                 response = new KeyIsLockedResponse();
             } else {
                 item.lock();
@@ -139,10 +140,10 @@ public class Server {
         Response response;
         if (this.repository.containsKey(key)) {
             RepositoryItem item = this.getItem(key);
-            if (item.isLocked()) {
+            if (!SHOULD_LOCK || item.isLocked()) {
                 item.setValue(value);
-                item.unlock();
                 this.repository.update(key, item);
+                item.unlock();
                 response = new UpdateSuccessResponse();
             } else {
                 response = new KeyNotLockedResponse();
@@ -153,12 +154,16 @@ public class Server {
         return response;
     }
 
-    // TODO: require lock?
     private Response responseForDelete(String key) {
         Response response;
         if (this.repository.containsKey(key)) {
-            this.repository.delete(key);
-            response = new DeleteSuccessResponse();
+            RepositoryItem item = this.getItem(key);
+            if (!SHOULD_LOCK || item.isLocked()) {
+                this.repository.delete(key);
+                response = new DeleteSuccessResponse();
+            } else {
+                response = new KeyNotLockedResponse();
+            }
         } else {
             response = new KeyDoesNotExistResponse();
         }
