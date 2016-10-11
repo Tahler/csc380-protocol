@@ -59,6 +59,21 @@ public class Clients {
         Observable.merge(updates).toBlocking().subscribe();
     }
 
+    public void performUpdatesOnKey(final int numUpdates, final String key) {
+        List<Observable<Void>> updates = new ArrayList<>(numUpdates);
+
+        for (int i = 0; i < numUpdates; i++) {
+            Observable<Void> update = Observable.create(subscriber ->
+                    new Thread(() -> {
+                        this.updateKey(key);
+
+                        subscriber.onCompleted();
+                    }).start());
+            updates.add(update);
+        }
+        Observable.merge(updates).toBlocking().subscribe();
+    }
+
     private String getRandomKey() {
         Random random = new Random();
         int randomIndex = random.nextInt(this.keys.size());
@@ -78,22 +93,6 @@ public class Clients {
                 break;
         }
         Client.updateObjectOnServer(key, value);
-    }
-
-    public static void main(String[] args) {
-        final int numUpdates = 100;
-
-        Clients clients = new Clients();
-        clients.fillServer();
-        System.out.println("Filled server with " + clients.keys.size() + " items.");
-
-        long startTime = System.currentTimeMillis();
-        clients.performUpdates(numUpdates);
-        long endTime = System.currentTimeMillis();
-        long totalTime = endTime - startTime;
-
-        double seconds = totalTime / 1000.0;
-        System.out.println("Completed " + numUpdates + " updates in " + totalTime + " millis (" + seconds + " seconds).");
     }
 }
 
