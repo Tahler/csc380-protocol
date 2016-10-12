@@ -12,20 +12,19 @@ public abstract class Response {
     }
 
     public enum Type {
-        GET_SUCCESS,
+        CONTAINS_KEY_SUCCESS,
         PUT_SUCCESS,
+        GET_SUCCESS,
+        LOCK_SUCCESS,
         UPDATE_SUCCESS,
         DELETE_SUCCESS,
-        LOCK_SUCCESS,
 
         INVALID_REQUEST,
         INVALID_KEY,
-
         KEY_DOES_NOT_EXIST,
         KEY_ALREADY_EXISTS,
         KEY_LOCKED,
         KEY_NOT_LOCKED,
-
         SERVER_FULL
     }
 }
