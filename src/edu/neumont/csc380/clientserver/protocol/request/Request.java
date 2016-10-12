@@ -18,8 +18,9 @@ public abstract class Request {
     }
 
     public enum Type {
-        GET,
+        CONTAINS_KEY,
         PUT,
+        GET,
         LOCK,
         UPDATE,
         DELETE
