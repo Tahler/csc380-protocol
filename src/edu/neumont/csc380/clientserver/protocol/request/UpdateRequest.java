@@ -1,20 +1,14 @@
 package edu.neumont.csc380.clientserver.protocol.request;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import edu.neumont.csc380.clientserver.models.TypedObject;
-
 public class UpdateRequest extends Request {
-    private JsonObject value;
+    private Object value;
 
-    public UpdateRequest(String key, TypedObject value) {
+    public UpdateRequest(String key, Object value) {
         super(Type.UPDATE, key);
-
-        Gson gson = new Gson();
-        this.value = gson.fromJson(gson.toJson(value), JsonObject.class);
+        this.value = value;
     }
 
-    public JsonObject getValue() {
+    public Object getValue() {
         return this.value;
     }
 }

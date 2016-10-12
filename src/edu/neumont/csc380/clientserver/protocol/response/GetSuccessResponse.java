@@ -1,19 +1,14 @@
 package edu.neumont.csc380.clientserver.protocol.response;
 
-import com.google.gson.JsonObject;
-import edu.neumont.csc380.clientserver.models.TypedObject;
-import edu.neumont.csc380.clientserver.protocol.Protocol;
-
 public class GetSuccessResponse extends Response {
-    private JsonObject value;
+    private Object value;
 
-    public GetSuccessResponse(JsonObject value) {
+    public GetSuccessResponse(Object value) {
         super(Type.GET_SUCCESS);
-
-        this.value = value; //Protocol.deserializeTypedObject(value);
+        this.value = value;
     }
 
-    public JsonObject getValue() {
+    public Object getValue() {
         return this.value;
     }
 }

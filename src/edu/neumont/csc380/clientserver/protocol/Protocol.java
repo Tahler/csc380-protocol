@@ -13,22 +13,24 @@ public class Protocol {
     public static final char ESCAPE_CHARACTER = '\\';
     public static final char STRING_TERMINATOR = ';';
 
-    public static TypedObject deserializeTypedObject(JsonObject value) {
-        String jsonDataType = value.get("type").getAsString();
+    public static TypedObject deserializeTypedObject(Object value) {
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(gson.toJson(value), JsonObject.class);
+
+        String jsonDataType = jsonObject.get("type").getAsString();
         TypedObject.Type dataType = TypedObject.Type.valueOf(jsonDataType);
 
-        JsonObject dataJson = value.get("data").getAsJsonObject();
+        JsonObject dataJson = jsonObject.get("data").getAsJsonObject();
 
-        Gson gson = new Gson();
         TypedObject deserialized;
         switch (dataType) {
             case DRIVER:
                 Driver driver = gson.fromJson(dataJson, Driver.class);
-                deserialized = new TypedObject<>(dataType, driver);
+                deserialized = new TypedObject(dataType, driver);
                 break;
             case RACECAR:
                 Racecar racecar = gson.fromJson(dataJson, Racecar.class);
-                deserialized = new TypedObject<>(dataType, racecar);
+                deserialized = new TypedObject(dataType, racecar);
                 break;
             default:
                 throw new RuntimeException("Impossible data type: " + dataType);
