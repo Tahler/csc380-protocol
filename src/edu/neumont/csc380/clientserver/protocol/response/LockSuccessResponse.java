@@ -1,17 +1,14 @@
 package edu.neumont.csc380.clientserver.protocol.response;
 
-import com.google.gson.JsonObject;
-
 public class LockSuccessResponse extends Response {
-    private JsonObject value;
+    private Object value;
 
-    public LockSuccessResponse(JsonObject value) {
+    public LockSuccessResponse(Object value) {
         super(Type.LOCK_SUCCESS);
-
-        this.value = value; //Protocol.deserializeTypedObject(value);
+        this.value = value;
     }
 
-    public JsonObject getValue() {
+    public Object getValue() {
         return this.value;
     }
 }
