@@ -1,4 +1,4 @@
-package edu.neumont.csc380.clientserver.protocol.io;
+package edu.neumont.csc380.clientserver.protocol.serialization;
 
 import edu.neumont.csc380.clientserver.protocol.Protocol;
 
