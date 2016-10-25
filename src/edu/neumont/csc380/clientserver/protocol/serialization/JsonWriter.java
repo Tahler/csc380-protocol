@@ -1,6 +1,7 @@
 package edu.neumont.csc380.clientserver.protocol.serialization;
 
 import com.google.gson.Gson;
+import com.hallaLib.HallaZip;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,7 +22,6 @@ public class JsonWriter {
         String json = gson.toJson(object);
         try {
             writer.write(json);
-            System.out.println("success");
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
