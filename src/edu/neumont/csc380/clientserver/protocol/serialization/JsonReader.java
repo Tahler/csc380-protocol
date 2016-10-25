@@ -17,7 +17,6 @@ public class JsonReader {
 
     public String readJson() {
         Reader reader = new InputStreamReader(this.inputStream);
-        System.out.println("I'm here1");
         try {
             reader.read();
         } catch (IOException e) {
@@ -25,10 +24,6 @@ public class JsonReader {
         }
 
         Gson gson = new Gson();
-        System.out.println("I'm here");
-        JsonObject obj = gson.fromJson(reader, JsonObject.class);
-        System.out.println(obj);
-
         return gson.toJson(gson.fromJson(reader, JsonObject.class));
     }
 }
