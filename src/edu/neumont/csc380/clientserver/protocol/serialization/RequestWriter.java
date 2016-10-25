@@ -1,6 +1,5 @@
 package edu.neumont.csc380.clientserver.protocol.serialization;
 
-import com.google.gson.Gson;
 import edu.neumont.csc380.clientserver.protocol.request.Request;
 
 import java.io.OutputStream;
@@ -13,10 +12,7 @@ public class RequestWriter {
     }
 
     public void writeRequest(Request request) {
-        Gson gson = new Gson();
-        String json = gson.toJson(request);
-
-        StringWriter stringWriter = new StringWriter(this.outputStream);
-        stringWriter.writeString(json);
+        JsonWriter jsonWriter = new JsonWriter(this.outputStream);
+        jsonWriter.writeJson(request);
     }
 }

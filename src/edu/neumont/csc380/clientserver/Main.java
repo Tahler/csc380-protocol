@@ -1,8 +1,6 @@
 package edu.neumont.csc380.clientserver;
 
 import edu.neumont.csc380.clientserver.client.Clients;
-import edu.neumont.csc380.clientserver.models.Driver;
-import edu.neumont.csc380.clientserver.models.TypedObject;
 import edu.neumont.csc380.clientserver.protocol.Protocol;
 import edu.neumont.csc380.clientserver.server.Server;
 

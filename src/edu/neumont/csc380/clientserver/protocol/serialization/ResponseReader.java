@@ -14,8 +14,8 @@ public class ResponseReader {
     }
 
     public Response readResponse() {
-        StringReader stringReader = new StringReader(this.inputStream);
-        String json = stringReader.readString();
+        JsonReader jsonReader = new JsonReader(this.inputStream);
+        String json = jsonReader.readJson();
 
         Response.Type responseType = parseType(json);
         return this.deserializeBasedOnTypeParameter(json, responseType);
