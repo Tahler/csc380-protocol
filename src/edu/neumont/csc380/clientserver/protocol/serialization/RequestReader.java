@@ -14,8 +14,8 @@ public class RequestReader {
     }
 
     public Request readRequest() {
-        StringReader stringReader = new StringReader(this.inputStream);
-        String json = stringReader.readString();
+        JsonReader jsonReader = new JsonReader(this.inputStream);
+        String json = jsonReader.readJson();
         Request.Type requestType = parseType(json);
         return this.deserializeBasedOnTypeParameter(json, requestType);
     }

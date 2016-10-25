@@ -57,9 +57,10 @@ public class Server {
 
     private void handleClient(Socket client) {
         try {
+            System.out.println("hello");
+            System.out.println(client.getInputStream().read());
             RequestReader requestReader = new RequestReader(client.getInputStream());
             Request request = requestReader.readRequest();
-
             Response response = this.handleRequest(request);
 
             ResponseWriter responseWriter = new ResponseWriter(client.getOutputStream());
