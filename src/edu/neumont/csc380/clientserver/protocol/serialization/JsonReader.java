@@ -3,10 +3,8 @@ package edu.neumont.csc380.clientserver.protocol.serialization;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 public class JsonReader {
     private InputStream inputStream;
@@ -16,14 +14,12 @@ public class JsonReader {
     }
 
     public String readJson() {
-        Reader reader = new InputStreamReader(this.inputStream);
-        try {
-            reader.read();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ByteArrayReader byteArrayReader = new ByteArrayReader(this.inputStream);
+        byte[] bytes = byteArrayReader.read();
+        String converted = new String(bytes, StandardCharsets.US_ASCII);
 
+        System.out.println(converted);
         Gson gson = new Gson();
-        return gson.toJson(gson.fromJson(reader, JsonObject.class));
+        return gson.toJson(gson.fromJson(converted, JsonObject.class));
     }
 }
