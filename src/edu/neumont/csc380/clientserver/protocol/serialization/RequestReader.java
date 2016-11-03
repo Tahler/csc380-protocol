@@ -4,17 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import edu.neumont.csc380.clientserver.protocol.request.*;
 
-import java.io.InputStream;
+import java.net.Socket;
 
 public class RequestReader {
-    private InputStream inputStream;
+    private Socket socket;
 
-    public RequestReader(InputStream inputStream) {
-        this.inputStream = inputStream;
+    public RequestReader(Socket socket) {
+        this.socket = socket;
     }
 
     public Request readRequest() {
-        JsonReader jsonReader = new JsonReader(this.inputStream);
+        JsonReader jsonReader = new JsonReader(this.socket);
         String json = jsonReader.readJson();
         Request.Type requestType = parseType(json);
         return this.deserializeBasedOnTypeParameter(json, requestType);

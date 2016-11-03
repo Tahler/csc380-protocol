@@ -56,16 +56,12 @@ public class Server {
     }
 
     private void handleClient(Socket client) {
-        try {
-            RequestReader requestReader = new RequestReader(client.getInputStream());
-            Request request = requestReader.readRequest();
-            Response response = this.handleRequest(request);
+        RequestReader requestReader = new RequestReader(client);
+        Request request = requestReader.readRequest();
+        Response response = this.handleRequest(request);
 
-            ResponseWriter responseWriter = new ResponseWriter(client.getOutputStream());
-            responseWriter.writeResponse(response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ResponseWriter responseWriter = new ResponseWriter(client);
+        responseWriter.writeResponse(response);
     }
 
     private Response handleRequest(Request request) {

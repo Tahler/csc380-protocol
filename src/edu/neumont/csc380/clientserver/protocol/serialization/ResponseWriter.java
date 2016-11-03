@@ -2,17 +2,17 @@ package edu.neumont.csc380.clientserver.protocol.serialization;
 
 import edu.neumont.csc380.clientserver.protocol.response.Response;
 
-import java.io.OutputStream;
+import java.net.Socket;
 
 public class ResponseWriter {
-    private OutputStream outputStream;
+    private Socket socket;
 
-    public ResponseWriter(OutputStream outputStream) {
-        this.outputStream = outputStream;
+    public ResponseWriter(Socket socket) {
+        this.socket = socket;
     }
 
     public void writeResponse(Response response) {
-        JsonWriter jsonWriter = new JsonWriter(this.outputStream);
+        JsonWriter jsonWriter = new JsonWriter(this.socket);
         jsonWriter.writeJson(response);
     }
 }

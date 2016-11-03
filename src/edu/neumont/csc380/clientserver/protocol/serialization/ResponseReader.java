@@ -4,17 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import edu.neumont.csc380.clientserver.protocol.response.*;
 
-import java.io.InputStream;
+import java.net.Socket;
 
 public class ResponseReader {
-    private InputStream inputStream;
+    private Socket socket;
 
-    public ResponseReader(InputStream inputStream) {
-        this.inputStream = inputStream;
+    public ResponseReader(Socket socket) {
+        this.socket = socket;
     }
 
     public Response readResponse() {
-        JsonReader jsonReader = new JsonReader(this.inputStream);
+        JsonReader jsonReader = new JsonReader(this.socket);
         String json = jsonReader.readJson();
 
         Response.Type responseType = parseType(json);

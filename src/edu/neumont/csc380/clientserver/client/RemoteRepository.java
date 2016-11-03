@@ -2,6 +2,7 @@ package edu.neumont.csc380.clientserver.client;
 
 import edu.neumont.csc380.clientserver.models.repo.Repository;
 import edu.neumont.csc380.clientserver.models.repo.RepositoryFullException;
+import edu.neumont.csc380.clientserver.protocol.checksum.NonEqualChecksumException;
 import edu.neumont.csc380.clientserver.protocol.request.*;
 import edu.neumont.csc380.clientserver.protocol.response.ContainsKeySuccessResponse;
 import edu.neumont.csc380.clientserver.protocol.response.GetSuccessResponse;
@@ -106,12 +107,23 @@ public class RemoteRepository implements Repository<String, Object> {
         try (
                 Socket connection = new Socket(this.host, this.port)
         ) {
-            RequestWriter requestWriter = new RequestWriter(connection.getOutputStream());
+            RequestWriter requestWriter = new RequestWriter(connection);
 
             requestWriter.writeRequest(request);
 
-            ResponseReader responseReader = new ResponseReader(connection.getInputStream());
-            return responseReader.readResponse();
+            ResponseReader responseReader = new ResponseReader(connection);
+            Response response = null;
+            do {
+                try {
+                    response = responseReader.readResponse();
+                    // send 0
+                } catch (NonEqualChecksumException e) {
+                    e.printStackTrace();
+                    System.out.println("Retrying...");
+                    // send 1
+                }
+            } while (response == null);
+            return response;
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);

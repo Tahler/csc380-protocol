@@ -6,12 +6,14 @@ import edu.neumont.csc380.clientserver.protocol.checksum.NonEqualChecksumExcepti
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 public class ByteArrayReader {
-    private InputStream inputStream;
+    private Socket socket;
 
-    public ByteArrayReader(InputStream inputStream) {
-        this.inputStream = inputStream;
+    public ByteArrayReader(Socket socket) {
+        this.socket = socket;
     }
 
     /**
@@ -20,17 +22,24 @@ public class ByteArrayReader {
      */
     public byte[] read() {
         try {
-            int length = this.readNextInt();
+            InputStream inputStream = this.socket.getInputStream();
+            OutputStream outputStream = this.socket.getOutputStream();
 
-            byte[] compressedBytes = new byte[length];
-            this.inputStream.read(compressedBytes, 0, length);
+            boolean successfullyRead;
+            byte[] decompressedBytes;
+            do {
+                int length = this.readNextInt();
 
-            byte[] decompressedBytes = HallaZip.expand(compressedBytes);
-            int expectedChecksum = this.readNextInt();
-            boolean isCorrect = ChecksumCalculator.checksumIsCorrect(decompressedBytes, expectedChecksum);
-            if (!isCorrect) {
-                throw new NonEqualChecksumException();
-            }
+                byte[] compressedBytes = new byte[length];
+                inputStream.read(compressedBytes, 0, length);
+
+                decompressedBytes = HallaZip.expand(compressedBytes);
+                int expectedChecksum = this.readNextInt();
+                successfullyRead = ChecksumCalculator.checksumIsCorrect(decompressedBytes, expectedChecksum);
+
+                int responseByte = successfullyRead ? 0 : 1;
+                outputStream.write(responseByte);
+            } while (!successfullyRead);
 
             return decompressedBytes;
         } catch (IOException e) {
@@ -41,7 +50,7 @@ public class ByteArrayReader {
     private int readNextInt() {
         try {
             byte[] bytes = new byte[4];
-            this.inputStream.read(bytes, 0, 4);
+            this.socket.getInputStream().read(bytes, 0, 4);
             return ByteArrayConverter.readInt(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
