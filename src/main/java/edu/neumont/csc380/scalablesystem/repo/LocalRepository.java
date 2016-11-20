@@ -2,10 +2,10 @@ package edu.neumont.csc380.scalablesystem.repo;
 
 import com.hallaLib.HallaStor;
 
-public class PhysicalRepository implements Repository<String, Object> {
+public class LocalRepository implements Repository<String, Object> {
     private final HallaStor hallaStor;
 
-    public PhysicalRepository() {
+    public LocalRepository() {
         this.hallaStor = HallaStor.getInstance();
     }
 

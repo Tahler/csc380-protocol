@@ -21,7 +21,7 @@ public class Node {
     public Node(int port) {
         this.port = port;
         this.running = false;
-        this.repository = new PhysicalRepository();
+        this.repository = new LocalRepository();
     }
 
     public void start() {
