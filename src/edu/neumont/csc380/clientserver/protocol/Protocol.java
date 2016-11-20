@@ -10,9 +10,6 @@ public class Protocol {
     public static final String HOST = "localhost";
     public static final int PORT = 3000;
 
-    public static final char ESCAPE_CHARACTER = '\\';
-    public static final char STRING_TERMINATOR = ';';
-
     public static TypedObject deserializeTypedObject(Object value) {
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(gson.toJson(value), JsonObject.class);

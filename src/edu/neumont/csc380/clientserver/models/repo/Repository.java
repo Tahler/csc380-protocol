@@ -8,8 +8,6 @@ public interface Repository<K, V> {
 
     V get(K key);
 
-    V lock(K key);
-
     void update(K key, V value);
 
     void delete(K key);

@@ -21,7 +21,6 @@ public abstract class Request {
         CONTAINS_KEY,
         PUT,
         GET,
-        LOCK,
         UPDATE,
         DELETE
     }

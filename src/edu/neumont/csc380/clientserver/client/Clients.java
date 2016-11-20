@@ -69,7 +69,7 @@ public class Clients {
     }
 
     public void updateKey(String key) {
-        Object value = this.repository.lock(key);
+        Object value = this.repository.get(key);
         TypedObject typedValue = Protocol.deserializeTypedObject(value);
         switch (typedValue.getType()) {
             case DRIVER:
@@ -84,7 +84,3 @@ public class Clients {
         this.repository.update(key, value);
     }
 }
-
-// TODO:
-// - Logger
-// - Fully utilize Rx

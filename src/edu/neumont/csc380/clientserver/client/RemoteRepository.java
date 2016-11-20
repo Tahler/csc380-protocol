@@ -6,7 +6,6 @@ import edu.neumont.csc380.clientserver.protocol.checksum.NonEqualChecksumExcepti
 import edu.neumont.csc380.clientserver.protocol.request.*;
 import edu.neumont.csc380.clientserver.protocol.response.ContainsKeySuccessResponse;
 import edu.neumont.csc380.clientserver.protocol.response.GetSuccessResponse;
-import edu.neumont.csc380.clientserver.protocol.response.LockSuccessResponse;
 import edu.neumont.csc380.clientserver.protocol.response.Response;
 import edu.neumont.csc380.clientserver.protocol.serialization.RequestWriter;
 import edu.neumont.csc380.clientserver.protocol.serialization.ResponseReader;
@@ -57,7 +56,7 @@ public class RemoteRepository implements Repository<String, Object> {
 
     @Override
     public Object get(String key) {
-        Response response = this.makeRequestUntilNotLocked(new GetRequest(key));
+        Response response = this.makeRequest(new GetRequest(key));
 
         Object value;
         if (response.getType() == Response.Type.GET_SUCCESS) {
@@ -71,23 +70,8 @@ public class RemoteRepository implements Repository<String, Object> {
     }
 
     @Override
-    public Object lock(String key) {
-        Response response = this.makeRequestUntilNotLocked(new LockRequest(key));
-
-        Object value;
-        if (response.getType() == Response.Type.LOCK_SUCCESS) {
-            LockSuccessResponse responseWithValue = (LockSuccessResponse) response;
-
-            value = responseWithValue.getValue();
-        } else {
-            throw new RuntimeException("Server returned bad response: " + response.getType());
-        }
-        return value;
-    }
-
-    @Override
     public void update(String key, Object value) {
-        Response response = this.makeRequestUntilNotLocked(new UpdateRequest(key, value));
+        Response response = this.makeRequest(new UpdateRequest(key, value));
 
         if (response.getType() != Response.Type.UPDATE_SUCCESS) {
             throw new RuntimeException("Server returned bad response: " + response.getType());
@@ -96,7 +80,7 @@ public class RemoteRepository implements Repository<String, Object> {
 
     @Override
     public void delete(String key) {
-        Response response = this.makeRequestUntilNotLocked(new DeleteRequest(key));
+        Response response = this.makeRequest(new DeleteRequest(key));
 
         if (response.getType() != Response.Type.DELETE_SUCCESS) {
             throw new RuntimeException("Server returned bad response: " + response.getType());
@@ -128,24 +112,5 @@ public class RemoteRepository implements Repository<String, Object> {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    private Response makeRequestUntilNotLocked(Request request) {
-        long waitTime = 0;
-        Response response;
-        do {
-            response = this.makeRequest(request);
-
-            try {
-                Thread.sleep(waitTime);
-                if (waitTime <= MAX_WAIT_TIME) {
-                    waitTime += 10;
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        } while (response.getType() == Response.Type.KEY_LOCKED);
-        return response;
     }
 }

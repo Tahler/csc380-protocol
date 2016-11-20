@@ -29,9 +29,6 @@ public class RequestReader {
             case PUT:
                 subClass = PutRequest.class;
                 break;
-            case LOCK:
-                subClass = LockRequest.class;
-                break;
             case UPDATE:
                 subClass = UpdateRequest.class;
                 break;
