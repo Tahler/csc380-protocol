@@ -2,7 +2,6 @@ package edu.neumont.csc380.clientserver.server;
 
 import edu.neumont.csc380.clientserver.models.repo.KeyAlreadyExistsException;
 import edu.neumont.csc380.clientserver.models.repo.KeyDoesNotExistException;
-import edu.neumont.csc380.clientserver.models.repo.KeyIsLockedException;
 import edu.neumont.csc380.clientserver.models.repo.RepositoryFullException;
 import edu.neumont.csc380.clientserver.protocol.Protocol;
 import edu.neumont.csc380.clientserver.protocol.serialization.RequestReader;
@@ -16,19 +15,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Server {
+public class Node {
     private final int port;
     private boolean running;
     private final PhysicalRepository repository;
 
-    public Server(int port) {
-        this(port, true);
-    }
-
-    public Server(int port, boolean repositoryShouldLock) {
+    public Node(int port) {
         this.port = port;
         this.running = false;
-        this.repository = new PhysicalRepository(repositoryShouldLock);
+        this.repository = new PhysicalRepository();
     }
 
     public void start() {
@@ -79,9 +74,6 @@ public class Server {
                 PutRequest putRequest = (PutRequest) request;
                 response = this.responseForPut(putRequest.getKey(), putRequest.getValue());
                 break;
-            case LOCK:
-                response = this.responseForLock(request.getKey());
-                break;
             case UPDATE:
                 UpdateRequest updateRequest = (UpdateRequest) request;
                 response = this.responseForUpdate(updateRequest.getKey(), updateRequest.getValue());
@@ -120,21 +112,6 @@ public class Server {
             response = new GetSuccessResponse(value);
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
-        } catch (KeyIsLockedException e) {
-            response = new KeyIsLockedResponse();
-        }
-        return response;
-    }
-
-    private Response responseForLock(String key) {
-        Response response;
-        try {
-            Object value = this.repository.lock(key);
-            response = new LockSuccessResponse(value);
-        } catch (KeyDoesNotExistException e) {
-            response = new KeyDoesNotExistResponse();
-        } catch (KeyIsLockedException e) {
-            response = new KeyIsLockedResponse();
         }
         return response;
     }
@@ -146,8 +123,6 @@ public class Server {
             response = new UpdateSuccessResponse();
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
-        } catch (KeyIsLockedException e) {
-            response = new KeyIsLockedResponse();
         }
         return response;
     }
@@ -159,17 +134,13 @@ public class Server {
             response = new DeleteSuccessResponse();
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
-        } catch (KeyIsLockedException e) {
-            response = new KeyIsLockedResponse();
         }
         return response;
     }
 
     public static void main(String[] args) {
-        final boolean shouldLock = true;
-
-        Server server = new Server(Protocol.PORT, shouldLock);
-        server.start();
+        Node node = new Node(Protocol.PORT);
+        node.start();
     }
 }
 
