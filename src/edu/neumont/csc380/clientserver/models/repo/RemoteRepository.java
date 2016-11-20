@@ -1,7 +1,5 @@
-package edu.neumont.csc380.clientserver.client;
+package edu.neumont.csc380.clientserver.models.repo;
 
-import edu.neumont.csc380.clientserver.models.repo.Repository;
-import edu.neumont.csc380.clientserver.models.repo.RepositoryFullException;
 import edu.neumont.csc380.clientserver.protocol.checksum.NonEqualChecksumException;
 import edu.neumont.csc380.clientserver.protocol.request.*;
 import edu.neumont.csc380.clientserver.protocol.response.ContainsKeySuccessResponse;
@@ -52,7 +50,6 @@ public class RemoteRepository implements Repository<String, Object> {
             }
         }
     }
-
 
     @Override
     public Object get(String key) {

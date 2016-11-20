@@ -2,6 +2,7 @@ package edu.neumont.csc380.clientserver.client;
 
 import edu.neumont.csc380.clientserver.models.Driver;
 import edu.neumont.csc380.clientserver.models.Racecar;
+import edu.neumont.csc380.clientserver.models.repo.RemoteRepository;
 import edu.neumont.csc380.clientserver.models.repo.RepositoryFullException;
 import edu.neumont.csc380.clientserver.models.TypedObject;
 import edu.neumont.csc380.clientserver.protocol.Protocol;

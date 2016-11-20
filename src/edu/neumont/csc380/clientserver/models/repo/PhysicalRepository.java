@@ -1,7 +1,6 @@
-package edu.neumont.csc380.clientserver.server;
+package edu.neumont.csc380.clientserver.models.repo;
 
 import com.hallaLib.HallaStor;
-import edu.neumont.csc380.clientserver.models.repo.*;
 
 public class PhysicalRepository implements Repository<String, Object> {
     private final HallaStor hallaStor;
