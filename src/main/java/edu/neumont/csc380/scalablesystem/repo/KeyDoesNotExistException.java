@@ -1,4 +1,4 @@
-package edu.neumont.csc380.scalablesystem.models.repo;
+package edu.neumont.csc380.scalablesystem.repo;
 
 public class KeyDoesNotExistException extends RuntimeException {
     public KeyDoesNotExistException() {

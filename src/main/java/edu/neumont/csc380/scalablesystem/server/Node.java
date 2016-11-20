@@ -1,9 +1,6 @@
 package edu.neumont.csc380.scalablesystem.server;
 
-import edu.neumont.csc380.scalablesystem.models.repo.KeyAlreadyExistsException;
-import edu.neumont.csc380.scalablesystem.models.repo.KeyDoesNotExistException;
-import edu.neumont.csc380.scalablesystem.models.repo.PhysicalRepository;
-import edu.neumont.csc380.scalablesystem.models.repo.RepositoryFullException;
+import edu.neumont.csc380.scalablesystem.repo.*;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestReader;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseWriter;
@@ -19,7 +16,7 @@ import java.net.Socket;
 public class Node {
     private final int port;
     private boolean running;
-    private final PhysicalRepository repository;
+    private final Repository<String, Object> repository;
 
     public Node(int port) {
         this.port = port;

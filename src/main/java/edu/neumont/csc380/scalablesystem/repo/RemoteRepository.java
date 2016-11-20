@@ -1,4 +1,4 @@
-package edu.neumont.csc380.scalablesystem.models.repo;
+package edu.neumont.csc380.scalablesystem.repo;
 
 import edu.neumont.csc380.scalablesystem.protocol.checksum.NonEqualChecksumException;
 import edu.neumont.csc380.scalablesystem.protocol.request.*;
