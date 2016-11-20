@@ -1,4 +1,4 @@
-package edu.neumont.csc380.scalablesystem.client;
+package edu.neumont.csc380.scalablesystem;
 
 import edu.neumont.csc380.scalablesystem.models.Driver;
 import edu.neumont.csc380.scalablesystem.models.Racecar;

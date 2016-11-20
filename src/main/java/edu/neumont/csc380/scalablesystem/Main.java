@@ -1,6 +1,5 @@
 package edu.neumont.csc380.scalablesystem;
 
-import edu.neumont.csc380.scalablesystem.client.Clients;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
 import edu.neumont.csc380.scalablesystem.server.Node;
 
