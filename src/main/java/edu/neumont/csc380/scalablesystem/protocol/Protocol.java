@@ -8,7 +8,7 @@ import edu.neumont.csc380.scalablesystem.models.TypedObject;
 
 public class Protocol {
     public static final String HOST = "localhost";
-    public static final int PORT = 3000;
+    public static final int START_PORT = 3000;
 
     public static TypedObject deserializeTypedObject(Object value) {
         Gson gson = new Gson();

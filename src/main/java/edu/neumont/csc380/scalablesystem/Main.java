@@ -1,16 +1,16 @@
 package edu.neumont.csc380.scalablesystem;
 
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
-import edu.neumont.csc380.scalablesystem.server.Node;
+import edu.neumont.csc380.scalablesystem.ring.Node;
 
 public class Main {
     public static void main(String[] args) {
         final int numUpdates = 100;
 
-        Node node = new Node(Protocol.PORT);
+        Node node = new Node(Protocol.START_PORT);
         node.start();
 
-        Clients clients = new Clients(Protocol.HOST, Protocol.PORT);
+        Clients clients = new Clients(Protocol.HOST, Protocol.START_PORT);
         int numKeys = clients.fillServer();
         System.out.println("Filled server with " + numKeys + " items.");
 

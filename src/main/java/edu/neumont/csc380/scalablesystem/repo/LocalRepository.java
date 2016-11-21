@@ -2,7 +2,11 @@ package edu.neumont.csc380.scalablesystem.repo;
 
 import com.hallaLib.HallaStor;
 
+import java.util.TreeSet;
+
 public class LocalRepository implements Repository<String, Object> {
+    // Sorted set of keys to aid with splitting
+    private TreeSet<String> keys;
     private final HallaStor hallaStor;
 
     public LocalRepository() {

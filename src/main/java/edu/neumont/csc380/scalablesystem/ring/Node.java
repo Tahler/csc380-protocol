@@ -1,4 +1,4 @@
-package edu.neumont.csc380.scalablesystem.server;
+package edu.neumont.csc380.scalablesystem.ring;
 
 import edu.neumont.csc380.scalablesystem.repo.*;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
@@ -14,21 +14,21 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Node {
-    private final int port;
+    private final RingNodeInfo info;
+    private final Repository<String, Object> rxRepository;
     private boolean running;
-    private final Repository<String, Object> repository;
 
-    public Node(int port) {
-        this.port = port;
+    public Node(String host, int port) {
+        this.info = new RingNodeInfo(host, port);
+        this.rxRepository = new RingRepository(new LocalRepository(), new RingInfo());
         this.running = false;
-        this.repository = new LocalRepository();
     }
 
     public void start() {
         new Thread(() -> {
             try {
-                ServerSocket server = new ServerSocket(this.port);
-                System.out.println("Listening on port " + this.port);
+                ServerSocket server = new ServerSocket(this.info.port);
+                System.out.println("Listening on port " + this.info.port);
 
                 this.running = true;
                 while (this.running) {
@@ -86,14 +86,14 @@ public class Node {
     }
 
     private Response responseForContainsKey(String key) {
-        boolean containsKey = this.repository.containsKey(key);
+        boolean containsKey = this.rxRepository.containsKey(key);
         return new ContainsKeySuccessResponse(containsKey);
     }
 
     private Response responseForPut(String key, Object value) {
         Response response;
         try {
-            this.repository.put(key, value);
+            this.rxRepository.put(key, value);
             response = new PutSuccessResponse();
         } catch (KeyAlreadyExistsException e) {
             response = new KeyAlreadyExistsResponse();
@@ -106,7 +106,7 @@ public class Node {
     private Response responseForGet(String key) {
         Response response;
         try {
-            Object value = this.repository.get(key);
+            Object value = this.rxRepository.get(key);
             response = new GetSuccessResponse(value);
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
@@ -117,7 +117,7 @@ public class Node {
     private Response responseForUpdate(String key, Object value) {
         Response response;
         try {
-            this.repository.update(key, value);
+            this.rxRepository.update(key, value);
             response = new UpdateSuccessResponse();
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
@@ -128,7 +128,7 @@ public class Node {
     private Response responseForDelete(String key) {
         Response response;
         try {
-            this.repository.delete(key);
+            this.rxRepository.delete(key);
             response = new DeleteSuccessResponse();
         } catch (KeyDoesNotExistException e) {
             response = new KeyDoesNotExistResponse();
@@ -137,7 +137,7 @@ public class Node {
     }
 
     public static void main(String[] args) {
-        Node node = new Node(Protocol.PORT);
+        Node node = new Node(Protocol.HOST, Protocol.START_PORT);
         node.start();
     }
 }
