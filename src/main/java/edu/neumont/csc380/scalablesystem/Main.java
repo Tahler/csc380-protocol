@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         final int numUpdates = 100;
 
-        Node node = new Node(Protocol.START_PORT);
+        Node node = new Node(Protocol.HOST, Protocol.START_PORT);
         node.start();
 
         Clients clients = new Clients(Protocol.HOST, Protocol.START_PORT);

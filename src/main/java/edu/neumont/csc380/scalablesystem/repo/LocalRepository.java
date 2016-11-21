@@ -1,62 +1,81 @@
 package edu.neumont.csc380.scalablesystem.repo;
 
 import com.hallaLib.HallaStor;
+import rx.Completable;
+import rx.Observable;
+import rx.Single;
 
 import java.util.TreeSet;
 
-public class LocalRepository implements Repository<String, Object> {
+public class LocalRepository implements RxHallaStor {
     // Sorted set of keys to aid with splitting
     private TreeSet<String> keys;
     private final HallaStor hallaStor;
 
     public LocalRepository() {
+        this.keys = new TreeSet<>();
         this.hallaStor = HallaStor.getInstance();
     }
 
     @Override
-    public boolean containsKey(String key) {
-        return this.hallaStor.containsKey(key);
+    public Single<Boolean> containsKey(String key) {
+        return Single.just(this.keys.contains(key));
     }
 
     @Override
-    public void put(String key, Object value) {
-        if (this.containsKey(key)) {
-            throw new KeyAlreadyExistsException();
-        } else {
-            try {
-                this.hallaStor.add(key, value);
-            } catch (Exception e) {
-                throw new RepositoryFullException();
-            }
-        }
+    public Completable put(String key, Object value) {
+        return Observable
+                .create(subscriber -> {
+                    if (this.keys.contains(key)) {
+                        subscriber.onError(new KeyAlreadyExistsException());
+                    } else {
+                        try {
+                            this.hallaStor.add(key, value);
+                            subscriber.onCompleted();
+                        } catch (Exception e) {
+                            subscriber.onError(new RepositoryFullException());
+                        }
+                    }
+                })
+                .toCompletable();
     }
 
     @Override
-    public Object get(String key) {
-        Object value;
-        if (this.containsKey(key)) {
-            value = this.hallaStor.get(key);
-        } else {
-            throw new KeyDoesNotExistException();
-        }
-        return value;
+    public Single<Object> get(String key) {
+        return Single
+                .create(subscriber -> {
+                    Object value = this.hallaStor.get(key);
+                    if (value == null) {
+                        subscriber.onError(new KeyDoesNotExistException());
+                    } else {
+                        subscriber.onSuccess(value);
+                    }
+                });
     }
 
     @Override
-    public void update(String key, Object value) {
-        if (this.containsKey(key)) {
-            this.hallaStor.update(key, value);
-        } else {
-            throw new KeyDoesNotExistException();
-        }
+    public Completable update(String key, Object value) {
+        return Observable
+                .create(subscriber -> {
+                    if (this.keys.contains(key)) {
+                        this.hallaStor.update(key, value);
+                    } else {
+                        subscriber.onError(new KeyDoesNotExistException());
+                    }
+                })
+                .toCompletable();
     }
 
     @Override
-    public void delete(String key) {
-        if (this.containsKey(key)) {
-            this.hallaStor.delete(key);
-        } else {
-            throw new KeyDoesNotExistException();
-        }
+    public Completable delete(String key) {
+        return Observable
+                .create(subscriber -> {
+                    if (this.keys.contains(key)) {
+                        this.hallaStor.delete(key);
+                    } else {
+                        subscriber.onError(new KeyDoesNotExistException());
+                    }
+                })
+                .toCompletable();
     }
 }

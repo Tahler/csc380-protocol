@@ -6,6 +6,7 @@ import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
 import edu.neumont.csc380.scalablesystem.repo.RepositoryFullException;
 import edu.neumont.csc380.scalablesystem.models.TypedObject;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.ring.RingNodeInfo;
 import rx.Observable;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class Clients {
     private List<String> keys;
 
     public Clients(String host, int port) {
-        this.repository = new RemoteRepository(host, port);
+        this.repository = new RemoteRepository(new RingNodeInfo(host, port));
         this.keys = new ArrayList<>();
     }
 

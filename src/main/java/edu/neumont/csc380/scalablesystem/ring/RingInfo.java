@@ -2,6 +2,10 @@ package edu.neumont.csc380.scalablesystem.ring;
 
 import com.google.common.collect.*;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
+import edu.neumont.csc380.scalablesystem.repo.RxHallaStor;
+import rx.Completable;
+import rx.Observable;
 
 /**
  * Stores info about the cluster. Responsible for directing requests to the correct server.
@@ -21,41 +25,56 @@ public class RingInfo {
         this.mappings = mappings;
     }
 
-    public RingInfo copy() {
-        return new RingInfo(this.timestamp, this.mappings);
-    }
-
-    public RingNodeInfo getNodeContainingKey(String key) {
+    public RxHallaStor getRepositoryWithKey(String key) {
         int hash = key.hashCode();
-        return this.mappings.get(hash);
+        RingNodeInfo nodeInfo = this.mappings.get(hash);
+        return new RemoteRepository(nodeInfo);
     }
 
-    public void update(RingInfo other) {
-        if (other.timestamp > this.timestamp) {
-            this.mappings = other.mappings;
-        }
-    }
+//    public void update(RingInfo other) {
+//        if (other.timestamp > this.timestamp) {
+//            this.mappings = other.mappings;
+//        }
+//    }
+
+//    private static class HashRange {
+//        public static Range<Integer> from(int lower, int upper) {
+//            return Range.closedOpen(lower, upper);
+//        }
+//    }
+
+//    public static void main(String[] args) {
+////        Completable.complete()
+//        Completable.error(new RuntimeException("uh oh"))
+////        Completable.never()
+//                .toObservable()
+//                .onErrorReturn(e -> e)
+//                .map(o -> o)
+//                .toBlocking()
+//                .subscribe(System.out::println);
+////                .subscribe(o -> System.out.println("done"), err -> System.out.println(err));
+//
+//    }
 
     public static void main(String[] args) {
-//        Multiset<KeyRange> ms = TreeMultiset.from(Arrays.asList(
-//                new KeyRange(8, new RingNode("localhost", 8081)),
-//                new KeyRange(0, new RingNode("localhost", 8080))
-//        ));
+        Observable
+                .create(subscriber -> {
+                    throw new RuntimeException("thrown");
+                })
+                .map(couldBeErr -> "could be err")
+                .onErrorReturn(err -> "not an err")
+//                .toCompletable()
+//                .onErrorComplete(err -> {
+//                    System.out.println("hi");
+//                    return false;
+//                })
+//                .toObservable()
+//                .map(o -> {
+//                    System.out.println("here");
+//                    System.out.println(o);
+//                    return o;
+//                })
+                .subscribe(o -> System.out.println("not err: " + o), err -> System.out.println("ps: " + err));
 
-        RangeMap<Integer, RingNodeInfo> map = TreeRangeMap.create();
-        map.put(HashRange.from(0, 8), new RingNodeInfo("localhost", 8080));
-        map.put(HashRange.from(8, 16), new RingNodeInfo("localhost", 8081));
-        System.out.println(map.get(3));
-        System.out.println(map.get(0));
-        System.out.println(map.get(8));
-        System.out.println(map.get(16));
-
-        System.out.println(map.span());
-    }
-
-    private static class HashRange {
-        public static Range<Integer> from(int lower, int upper) {
-            return Range.closedOpen(lower, upper);
-        }
     }
 }

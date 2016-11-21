@@ -18,6 +18,30 @@ public class RingNodeInfo {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        RingNodeInfo that = (RingNodeInfo) o;
+
+        if (this.port != that.port) {
+            return false;
+        }
+        return this.host.equals(that.host);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = this.host.hashCode();
+        result = 31 * result + this.port;
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "RingNode{" +
                 "port=" + port +
