@@ -1,15 +1,11 @@
 package edu.neumont.csc380.scalablesystem.ring;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableRangeMap;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeMap;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
-import edu.neumont.csc380.scalablesystem.protocol.response.KeyAlreadyExistsResponse;
-import edu.neumont.csc380.scalablesystem.protocol.response.PutSuccessResponse;
-import edu.neumont.csc380.scalablesystem.repo.KeyAlreadyExistsException;
 import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
 import edu.neumont.csc380.scalablesystem.repo.RxHallaStor;
-import rx.Completable;
-import rx.Observable;
-import rx.Single;
 
 /**
  * Stores info about the cluster. Responsible for directing requests to the correct server.
@@ -46,50 +42,4 @@ public class RingInfo {
 //            return Range.closedOpen(lower, upper);
 //        }
 //    }
-
-//    public static void main(String[] args) {
-////        Completable.complete()
-//        Completable.error(new RuntimeException("uh oh"))
-////        Completable.never()
-//                .toObservable()
-//                .onErrorReturn(e -> e)
-//                .map(o -> o)
-//                .toBlocking()
-//                .subscribe(System.out::println);
-////                .subscribe(o -> System.out.println("done"), err -> System.out.println(err));
-//
-//    }
-
-    public static void main(String[] args) {
-//        Observable
-//                .create(subscriber -> {
-//                    throw new RuntimeException("thrown");
-//                })
-        Single.create(subscriber -> {
-            Completable
-                    .error(new RuntimeException("err"))
-                    .subscribe(
-                            () -> subscriber.onSuccess(new PutSuccessResponse()),
-                            err -> {
-                                if (err instanceof KeyAlreadyExistsException) {
-                                    subscriber.onSuccess(new KeyAlreadyExistsResponse());
-                                } else {
-                                    subscriber.onError(err);
-                                }
-                            });
-        })
-//                .toCompletable()
-//                .onErrorComplete(err -> {
-//                    System.out.println("hi");
-//                    return false;
-//                })
-//                .toObservable()
-//                .map(o -> {
-//                    System.out.println("here");
-//                    System.out.println(o);
-//                    return o;
-//                })
-                .subscribe(o -> System.out.println("not err: " + o), err -> System.out.println("ps: " + err));
-
-    }
 }

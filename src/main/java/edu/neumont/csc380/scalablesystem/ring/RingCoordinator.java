@@ -45,4 +45,6 @@ public class RingCoordinator implements RxHallaStor {
         RxHallaStor repositoryWithKey = this.ringInfo.getRepositoryWithKey(key);
         return repositoryWithKey.delete(key);
     }
+
+    // TODO: split on full errors
 }
