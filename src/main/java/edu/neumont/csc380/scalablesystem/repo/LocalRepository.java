@@ -31,6 +31,7 @@ public class LocalRepository implements RxHallaStor {
                     } else {
                         try {
                             this.hallaStor.add(key, value);
+                            this.keys.add(key);
                             subscriber.onCompleted();
                         } catch (Exception e) {
                             subscriber.onError(new RepositoryFullException());
@@ -72,6 +73,7 @@ public class LocalRepository implements RxHallaStor {
                 .create(subscriber -> {
                     if (this.keys.contains(key)) {
                         this.hallaStor.delete(key);
+                        this.keys.remove(key);
                     } else {
                         subscriber.onError(new KeyDoesNotExistException());
                     }
