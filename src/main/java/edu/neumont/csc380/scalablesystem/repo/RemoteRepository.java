@@ -9,7 +9,6 @@ import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestWriter;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseReader;
 import edu.neumont.csc380.scalablesystem.ring.RingNodeInfo;
 import rx.Completable;
-import rx.Observable;
 import rx.Single;
 
 import java.io.IOException;
@@ -117,7 +116,7 @@ public class RemoteRepository implements RxHallaStor {
                 subscriber.onSuccess(response);
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new RuntimeException(e);
+                subscriber.onError(e);
             }
         });
     }

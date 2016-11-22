@@ -1,15 +1,14 @@
 package edu.neumont.csc380.scalablesystem.ring;
 
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.protocol.request.PutRequest;
 import edu.neumont.csc380.scalablesystem.protocol.request.Request;
+import edu.neumont.csc380.scalablesystem.protocol.request.UpdateRequest;
 import edu.neumont.csc380.scalablesystem.protocol.response.*;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestReader;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseWriter;
-import edu.neumont.csc380.scalablesystem.repo.KeyDoesNotExistException;
-import edu.neumont.csc380.scalablesystem.repo.LocalRepository;
-import edu.neumont.csc380.scalablesystem.repo.RxHallaStor;
+import edu.neumont.csc380.scalablesystem.repo.*;
 import rx.Completable;
-import rx.Observable;
 import rx.Single;
 
 import java.io.IOException;
@@ -63,32 +62,31 @@ public class Node {
     }
 
     private Single<Response> handleRequest(Request request) {
-//        Request.Type operation = request.getType();
-//
-//        Observable<Response> response;
-//        switch (operation) {
-//            case CONTAINS_KEY:
-//                response = this.responseForContainsKey(request.getKey());
-//                break;
-//            case GET:
-//                response = this.responseForGet(request.getKey());
-//                break;
-//            case PUT:
-//                PutRequest putRequest = (PutRequest) request;
-//                response = this.responseForPut(putRequest.getKey(), putRequest.getValue());
-//                break;
-//            case UPDATE:
-//                UpdateRequest updateRequest = (UpdateRequest) request;
-//                response = this.responseForUpdate(updateRequest.getKey(), updateRequest.getValue());
-//                break;
-//            case DELETE:
-//                response = this.responseForDelete(request.getKey());
-//                break;
-//            default:
-//                throw new RuntimeException("Impossible request type: " + operation);
-//        }
-//        return response;
-        return null;
+        Request.Type operation = request.getType();
+
+        Single<Response> response;
+        switch (operation) {
+            case CONTAINS_KEY:
+                response = this.responseForContainsKey(request.getKey());
+                break;
+            case GET:
+                response = this.responseForGet(request.getKey());
+                break;
+            case PUT:
+                PutRequest putRequest = (PutRequest) request;
+                response = this.responseForPut(putRequest.getKey(), putRequest.getValue());
+                break;
+            case UPDATE:
+                UpdateRequest updateRequest = (UpdateRequest) request;
+                response = this.responseForUpdate(updateRequest.getKey(), updateRequest.getValue());
+                break;
+            case DELETE:
+                response = this.responseForDelete(request.getKey());
+                break;
+            default:
+                throw new RuntimeException("Impossible request type: " + operation);
+        }
+        return response;
     }
 
     private Single<Response> responseForContainsKey(String key) {
@@ -96,68 +94,66 @@ public class Node {
                 .map(ContainsKeySuccessResponse::new);
     }
 
-    private Observable<Response> responseForPut(String key, Object value) {
-//        // TODO: look up rxjava error handling
-//        return this.repository.put(key, value)
-//                .toObservable()
-//                .map(val -> {
-//
-//                });
-////                .toObservable()
-////                .map(() -> new PutSuccessResponse())
-//                .onErrorReturn(error -> {
-//                    if (error instanceof KeyAlreadyExistsException) {
-//                        return new KeyAlreadyExistsResponse();
-////                    } else if (error instanceof) {
-////
-//                    } else {
-//                        return new ServerFullResponse();
-//                    }
-//                });
-//        Response response;
-//        try {
-//            this.repository.put(key, value);
-//            response = new PutSuccessResponse();
-//        } catch (KeyAlreadyExistsException e) {
-//            response = new KeyAlreadyExistsResponse();
-//        } catch (RepositoryFullException e) {
-//            response = new ServerFullResponse();
-//        }
-//        return response;
-        return null;
+    private Single<Response> responseForPut(String key, Object value) {
+        return Single.create(subscriber -> {
+            this.repository.put(key, value)
+                    .subscribe(
+                            () -> subscriber.onSuccess(new PutSuccessResponse()),
+                            err -> {
+                                if (err instanceof KeyAlreadyExistsException) {
+                                    subscriber.onSuccess(new KeyAlreadyExistsResponse());
+                                } else if (err instanceof RepositoryFullException) {
+                                    subscriber.onSuccess(new ServerFullResponse());
+                                } else {
+                                    subscriber.onError(err);
+                                }
+                            });
+        });
     }
 
-    private Response responseForGet(String key) {
-        Response response;
-        try {
-            Object value = this.repository.get(key);
-            response = new GetSuccessResponse(value);
-        } catch (KeyDoesNotExistException e) {
-            response = new KeyDoesNotExistResponse();
-        }
-        return response;
+    private Single<Response> responseForGet(String key) {
+        return Single.create(subscriber -> {
+            this.repository.get(key)
+                    .subscribe(
+                            val -> subscriber.onSuccess(new GetSuccessResponse(val)),
+                            err -> {
+                                if (err instanceof KeyDoesNotExistException) {
+                                    subscriber.onSuccess(new KeyDoesNotExistResponse());
+                                } else {
+                                    subscriber.onError(err);
+                                }
+                            });
+        });
     }
 
-    private Response responseForUpdate(String key, Object value) {
-        Response response;
-        try {
-            this.repository.update(key, value);
-            response = new UpdateSuccessResponse();
-        } catch (KeyDoesNotExistException e) {
-            response = new KeyDoesNotExistResponse();
-        }
-        return response;
+    private Single<Response> responseForUpdate(String key, Object value) {
+        return Single.create(subscriber -> {
+            this.repository.update(key, value)
+                    .subscribe(
+                            () -> subscriber.onSuccess(new UpdateSuccessResponse()),
+                            err -> {
+                                if (err instanceof KeyDoesNotExistException) {
+                                    subscriber.onSuccess(new KeyDoesNotExistResponse());
+                                } else {
+                                    subscriber.onError(err);
+                                }
+                            });
+        });
     }
 
-    private Response responseForDelete(String key) {
-        Response response;
-        try {
-            this.repository.delete(key);
-            response = new DeleteSuccessResponse();
-        } catch (KeyDoesNotExistException e) {
-            response = new KeyDoesNotExistResponse();
-        }
-        return response;
+    private Single<Response> responseForDelete(String key) {
+        return Single.create(subscriber -> {
+            this.repository.delete(key)
+                    .subscribe(
+                            () -> subscriber.onSuccess(new DeleteSuccessResponse()),
+                            err -> {
+                                if (err instanceof KeyDoesNotExistException) {
+                                    subscriber.onSuccess(new KeyDoesNotExistResponse());
+                                } else {
+                                    subscriber.onError(err);
+                                }
+                            });
+        });
     }
 
     public static void main(String[] args) {

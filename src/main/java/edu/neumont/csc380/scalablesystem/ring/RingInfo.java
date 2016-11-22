@@ -2,10 +2,14 @@ package edu.neumont.csc380.scalablesystem.ring;
 
 import com.google.common.collect.*;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.protocol.response.KeyAlreadyExistsResponse;
+import edu.neumont.csc380.scalablesystem.protocol.response.PutSuccessResponse;
+import edu.neumont.csc380.scalablesystem.repo.KeyAlreadyExistsException;
 import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
 import edu.neumont.csc380.scalablesystem.repo.RxHallaStor;
 import rx.Completable;
 import rx.Observable;
+import rx.Single;
 
 /**
  * Stores info about the cluster. Responsible for directing requests to the correct server.
@@ -57,12 +61,23 @@ public class RingInfo {
 //    }
 
     public static void main(String[] args) {
-        Observable
-                .create(subscriber -> {
-                    throw new RuntimeException("thrown");
-                })
-                .map(couldBeErr -> "could be err")
-                .onErrorReturn(err -> "not an err")
+//        Observable
+//                .create(subscriber -> {
+//                    throw new RuntimeException("thrown");
+//                })
+        Single.create(subscriber -> {
+            Completable
+                    .error(new RuntimeException("err"))
+                    .subscribe(
+                            () -> subscriber.onSuccess(new PutSuccessResponse()),
+                            err -> {
+                                if (err instanceof KeyAlreadyExistsException) {
+                                    subscriber.onSuccess(new KeyAlreadyExistsResponse());
+                                } else {
+                                    subscriber.onError(err);
+                                }
+                            });
+        })
 //                .toCompletable()
 //                .onErrorComplete(err -> {
 //                    System.out.println("hi");
