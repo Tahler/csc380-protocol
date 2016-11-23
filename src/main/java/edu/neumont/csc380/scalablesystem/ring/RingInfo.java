@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
-import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
-import edu.neumont.csc380.scalablesystem.repo.RxHallaStor;
 
 /**
  * Stores info about the cluster. Responsible for directing requests to the correct server.
@@ -25,10 +23,9 @@ public class RingInfo {
         this.mappings = mappings;
     }
 
-    public RxHallaStor getRepositoryWithKey(String key) {
+    public RingNodeInfo getNodeWithKey(String key) {
         int hash = key.hashCode();
-        RingNodeInfo nodeInfo = this.mappings.get(hash);
-        return new RemoteRepository(nodeInfo);
+        return this.mappings.get(hash);
     }
 
 //    public void update(RingInfo other) {
