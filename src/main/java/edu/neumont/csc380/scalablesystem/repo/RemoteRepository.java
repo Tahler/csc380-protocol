@@ -14,6 +14,7 @@ import rx.Single;
 import java.io.IOException;
 import java.net.Socket;
 
+// TODO: if it doesn't respond, just try the next nodeinfo
 public class RemoteRepository implements RxHallaStor {
     private final RingNodeInfo remoteNodeInfo;
 

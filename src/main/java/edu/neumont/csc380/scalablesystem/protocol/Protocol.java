@@ -7,9 +7,6 @@ import edu.neumont.csc380.scalablesystem.models.Racecar;
 import edu.neumont.csc380.scalablesystem.models.TypedObject;
 
 public class Protocol {
-    public static final String HOST = "localhost";
-    public static final int START_PORT = 3000;
-
     public static TypedObject deserializeTypedObject(Object value) {
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(gson.toJson(value), JsonObject.class);

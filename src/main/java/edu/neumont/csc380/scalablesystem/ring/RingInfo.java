@@ -3,19 +3,22 @@ package edu.neumont.csc380.scalablesystem.ring;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
-import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.Config;
+
+import java.io.Serializable;
 
 /**
  * Stores info about the cluster. Responsible for directing requests to the correct server.
  */
-public class RingInfo {
+public class RingInfo implements Serializable {
     private long timestamp;
     private RangeMap<Integer, RingNodeInfo> mappings;
 
     public RingInfo() {
         this(
                 System.currentTimeMillis(),
-                ImmutableRangeMap.of(Range.all(), new RingNodeInfo(Protocol.HOST, Protocol.START_PORT)));
+                // TODO: this needs to coordinate with Spawner, will be hard with replication
+                ImmutableRangeMap.of(Range.all(), new RingNodeInfo(Config.HOST, Config.START_PORT)));
     }
 
     public RingInfo(long timestamp, RangeMap<Integer, RingNodeInfo> mappings) {
@@ -26,6 +29,18 @@ public class RingInfo {
     public RingNodeInfo getNodeWithKey(String key) {
         int hash = key.hashCode();
         return this.mappings.get(hash);
+    }
+
+    public long getTimestamp() {
+        return this.timestamp;
+    }
+
+    public RangeMap<Integer, RingNodeInfo> getMappings() {
+        return this.mappings;
+    }
+
+    public void timestamp() {
+        this.timestamp = System.currentTimeMillis();
     }
 
 //    public void update(RingInfo other) {

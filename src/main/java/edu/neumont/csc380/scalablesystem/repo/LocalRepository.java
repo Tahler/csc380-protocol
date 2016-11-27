@@ -5,6 +5,8 @@ import rx.Completable;
 import rx.Observable;
 import rx.Single;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 public class LocalRepository implements RxHallaStor {
@@ -17,7 +19,32 @@ public class LocalRepository implements RxHallaStor {
         this.hallaStor = HallaStor.getInstance();
     }
 
-    @Override
+    public Map.Entry<String, Object> peekLast() {
+        String key = this.keys.last();
+        Object value = this.hallaStor.get(key);
+        return new AbstractMap.SimpleEntry<>(key, value);
+    }
+
+    /**
+     * Retrieves and removes the key-value pair with the last key in the sorted key-set.
+     * @return The key-value pair with the last key in the sorted set.
+     */
+    public Map.Entry<String, Object> pollLast() {
+        String key = this.keys.pollLast();
+        Object value = this.hallaStor.get(key);
+        this.hallaStor.delete(key);
+        return new AbstractMap.SimpleEntry<>(key, value);
+    }
+
+    public void push(Map.Entry<String, Object> entry) {
+        this.keys.add(entry.getKey());
+        this.hallaStor.add(entry.getKey(), entry.getValue());
+    }
+
+    public int size() {
+        return this.keys.size();
+    }
+
     public Single<Boolean> containsKey(String key) {
         return Single.just(this.keys.contains(key));
     }
@@ -33,7 +60,7 @@ public class LocalRepository implements RxHallaStor {
                             this.hallaStor.add(key, value);
                             this.keys.add(key);
                             subscriber.onCompleted();
-                        } catch (Exception e) {
+                        } catch (IllegalStateException e) {
                             subscriber.onError(new RepositoryFullException());
                         }
                     }

@@ -1,6 +1,6 @@
 package edu.neumont.csc380.scalablesystem.ring;
 
-import edu.neumont.csc380.scalablesystem.protocol.Protocol;
+import edu.neumont.csc380.scalablesystem.Serializer;
 import edu.neumont.csc380.scalablesystem.protocol.request.PutRequest;
 import edu.neumont.csc380.scalablesystem.protocol.request.Request;
 import edu.neumont.csc380.scalablesystem.protocol.request.UpdateRequest;
@@ -14,16 +14,23 @@ import rx.Single;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 public class Node {
     private final RingNodeInfo info;
     private final RxHallaStor repository;
     private boolean running;
 
-    public Node(String host, int port) {
+    public Node(String host, int port, LocalRepository localRepo, RingInfo info) {
         this.info = new RingNodeInfo(host, port);
-        this.repository = new RingCoordinator(this.info, new LocalRepository(), new RingInfo());
+        this.repository = new RingCoordinator(this.info, localRepo, info);
         this.running = false;
+    }
+
+    public Node(String host, int port) {
+        this(host, port, new LocalRepository(), new RingInfo());
     }
 
     public void start() {
@@ -157,9 +164,35 @@ public class Node {
     }
 
     public static void main(String[] args) {
-        // TODO: parse arguments
-        Node node = new Node(Protocol.HOST, Protocol.START_PORT);
+        if (args.length < 2) {
+            throw new RuntimeException("Can't parse host and port");
+        }
+
+        String host = args[0];
+        int port = Integer.parseInt(args[1]);
+
+        Node node = new Node(host, port);
+
+        if (args.length == 4) {
+            String repoFile = args[2];
+            Map<String, Object> repo = Serializer.consumeObjectFromTempFile(repoFile);
+
+            String ringInfoFile = args[3];
+            RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
+
+            preLoadNode(node, repo, ringInfo);
+        }
+
         node.start();
+    }
+
+    private static void preLoadNode(Node node, Map<String, Object> repo, RingInfo ringInfo) {
+        Collection<Completable> all = new ArrayList<>(repo.size());
+        for (Map.Entry<String, Object> entry : repo.entrySet()) {
+            Completable toDo = node.repository.put(entry.getKey(), entry.getValue());
+            all.add(toDo);
+        }
+        Completable.merge(all).toObservable().toBlocking();
     }
 }
 
