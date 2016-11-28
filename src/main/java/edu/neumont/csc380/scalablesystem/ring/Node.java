@@ -8,6 +8,8 @@ import edu.neumont.csc380.scalablesystem.protocol.response.*;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestReader;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseWriter;
 import edu.neumont.csc380.scalablesystem.repo.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import rx.Completable;
 import rx.Single;
 
@@ -19,11 +21,15 @@ import java.util.Collection;
 import java.util.Map;
 
 public class Node {
+    private final static Logger LOGGER = LogManager.getRootLogger();
+
     private final RingNodeInfo info;
     private final RxHallaStor repository;
     private boolean running;
 
     public Node(String host, int port, LocalRepository localRepo, RingInfo info) {
+        LOGGER.info("Instantiating node with port " + port);
+
         this.info = new RingNodeInfo(host, port);
         this.repository = new RingCoordinator(this.info, localRepo, info);
         this.running = false;
