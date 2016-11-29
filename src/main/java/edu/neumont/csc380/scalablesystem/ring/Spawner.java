@@ -15,7 +15,7 @@ import java.util.TreeMap;
 
 public class Spawner {
     // A file to serve as the "spawning service"
-    public static final String NEXT_NODE_FILE_NAME = "nextport";
+    public static final String NEXT_NODE_FILE_NAME = "nextport.tmp";
 
     public static void spawn(RingNodeInfo toSpawn, RingInfo ringInfo, Map<? extends String, ?> items) {
         ProcessBuilder processBuilder = new ProcessBuilder();
