@@ -16,7 +16,7 @@ import java.net.Socket;
 
 // TODO: if it doesn't respond, just try the next nodeinfo
 public class RemoteRepository implements RxHallaStor {
-    private final RingNodeInfo remoteNodeInfo;
+    public final RingNodeInfo remoteNodeInfo;
 
     public RemoteRepository(RingNodeInfo remoteNodeInfo) {
         this.remoteNodeInfo = remoteNodeInfo;
@@ -39,6 +39,7 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
+        System.out.println("putting " + key + " : " + value);
         return this.makeRequest(new PutRequest(key, value))
                 .doOnSuccess(response -> {
                     Response.Type responseType = response.getType();
@@ -114,6 +115,7 @@ public class RemoteRepository implements RxHallaStor {
                     }
                 } while (response == null);
 
+                System.out.println(response);
                 subscriber.onSuccess(response);
             } catch (IOException e) {
                 e.printStackTrace();

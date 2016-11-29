@@ -11,11 +11,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="hallaLib" level="project" />
     <orderEntry type="module-library">
-      <library name="Maven: com.hallaLib:hallaLib:1.0">
+      <library name="Maven: com.hallaLib:hallaasLib:1.0">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/hallaLib.jar!/" />
+          <root url="jar://$MODULE_DIR$/src/main/resources/hallaLib.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

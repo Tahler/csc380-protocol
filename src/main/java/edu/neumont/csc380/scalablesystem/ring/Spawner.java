@@ -9,33 +9,41 @@ import edu.neumont.csc380.scalablesystem.repo.LocalRepository;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Spawner {
     // A file to serve as the "spawning service"
     public static final String NEXT_NODE_FILE_NAME = "nextport.tmp";
 
+    // TODO: should be completable to know when node has started
     public static void spawn(RingNodeInfo toSpawn, RingInfo ringInfo, Map<? extends String, ?> items) {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        // TODO: classpath, mem, etc.
-//        processBuilder.command();
-
-        processBuilder.command("java", "Node", toSpawn.host, toSpawn.port + "");
+        // TODO: memory, etc.
+        List<String> argsList = new ArrayList<>(4);
+        argsList.add(toSpawn.host);
+        argsList.add(toSpawn.port + "");
 
         if (ringInfo != null) {
+            assert items != null;
+
             String ringInfoFileName = Serializer.writeObjectToTempFile(ringInfo);
-            processBuilder.command(ringInfoFileName);
-        }
-        if (items != null) {
+            argsList.add(ringInfoFileName);
+
             String mapFileName = Serializer.writeObjectToTempFile(ringInfo);
-            processBuilder.command(mapFileName);
+            argsList.add(mapFileName);
         }
+        String args = String.join(" ", argsList);
+        String command = String.format(
+                    "mvn exec:java " +
+                    "-Dexec.mainClass=\"edu.neumont.csc380.scalablesystem.ring.Node\" " +
+                    "-Dexec.args=\"%s\"", args);
         try {
-            Process process = processBuilder.start();
-            System.out.println("spawning with cmd : " + processBuilder.command());
-            System.out.println("");
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command(Arrays.asList(
+                    "bash",
+                    "-c",
+                    command));
+            // TODO: remove or logging
+            processBuilder.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -73,6 +81,8 @@ public class Spawner {
             PrintWriter writer = new PrintWriter(file);
             writer.write(host + "\n");
             writer.write(port + "");
+            writer.flush();
+            writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

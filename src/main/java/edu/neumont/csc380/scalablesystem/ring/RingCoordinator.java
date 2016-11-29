@@ -25,9 +25,16 @@ public class RingCoordinator implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
+        Node.LOGGER.debug("RingCoordinator: putting " + key + ":" + value);
+
         RxHallaStor repositoryWithKey = this.getRepoWithKey(key);
+        if (repositoryWithKey instanceof RemoteRepository) {
+            RingNodeInfo remoteNodeInfo = ((RemoteRepository) repositoryWithKey).remoteNodeInfo;
+            Node.LOGGER.debug("Redirecting to " + remoteNodeInfo);
+        }
         return repositoryWithKey.put(key, value)
                 .onErrorResumeNext(err -> {
+                    Node.LOGGER.debug("Repository is full. Splitting...");
                     assert repositoryWithKey == this.localRepo;
 
                     Spawner.split(this.ringInfo, this.localRepo);

@@ -14,11 +14,18 @@ public class RingInfo implements Serializable {
     private long timestamp;
     private RangeMap<Integer, RingNodeInfo> mappings;
 
+    /**
+     * Initializes the first RingInfo, spanning all ranges to the first node.
+     */
     public RingInfo() {
         this(
                 System.currentTimeMillis(),
                 // TODO: this needs to coordinate with Spawner, will be hard with replication
-                ImmutableRangeMap.of(Range.all(), new RingNodeInfo(Config.HOST, Config.START_PORT)));
+                get());
+    }
+
+    public static RangeMap<Integer, RingNodeInfo> get() {
+        return ImmutableRangeMap.of(Range.all(), new RingNodeInfo(Config.HOST, Config.START_PORT));
     }
 
     public RingInfo(long timestamp, RangeMap<Integer, RingNodeInfo> mappings) {

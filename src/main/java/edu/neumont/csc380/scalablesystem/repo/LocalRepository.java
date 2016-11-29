@@ -1,6 +1,7 @@
 package edu.neumont.csc380.scalablesystem.repo;
 
 import com.hallaLib.HallaStor;
+import edu.neumont.csc380.scalablesystem.ring.Node;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -51,6 +52,7 @@ public class LocalRepository implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
+        Node.LOGGER.info("Putting " + key + " : " + value + "...");
         return Observable
                 .create(subscriber -> {
                     if (this.keys.contains(key)) {
@@ -59,6 +61,7 @@ public class LocalRepository implements RxHallaStor {
                         try {
                             this.hallaStor.add(key, value);
                             this.keys.add(key);
+                            Node.LOGGER.info("...done putting " + key + " : " + value + ".");
                             subscriber.onCompleted();
                         } catch (IllegalStateException e) {
                             subscriber.onError(new RepositoryFullException());
