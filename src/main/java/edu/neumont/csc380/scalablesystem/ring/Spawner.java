@@ -5,6 +5,8 @@ import edu.neumont.csc380.scalablesystem.Config;
 import edu.neumont.csc380.scalablesystem.Serializer;
 import edu.neumont.csc380.scalablesystem.comparator.HashComparator;
 import edu.neumont.csc380.scalablesystem.repo.LocalRepository;
+import rx.Completable;
+import rx.Single;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -16,7 +18,7 @@ public class Spawner {
     public static final String NEXT_NODE_FILE_NAME = "next-node.tmp";
 
     // TODO: should be completable to know when node has started
-    public static void spawn(RingNodeInfo toSpawn, RingInfo ringInfo, Map<? extends String, ?> items) {
+    public static Completable spawn(RingNodeInfo toSpawn, RingInfo ringInfo, Map<? extends String, ?> items) {
         if (Node.LOGGER != null) {
             Node.LOGGER.debug("SPAWNING: " + toSpawn + "\n with " + ringInfo + "\n and " + items);
         }
@@ -50,16 +52,33 @@ public class Spawner {
             if (Node.LOGGER != null) {
                 Node.LOGGER.debug("SPAWNING - " + processBuilder.command());
             }
-            processBuilder.start();
+            Process process = processBuilder.start();
+
+            return Completable.create(subscriber -> {
+                InputStream stdout = process.getInputStream();
+                BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
+                // TODO: error handling (subscribe to stderr)
+                Completable spawnCompletable = Completable.create(stdoutSubscriber -> {
+                    // TODO: consider spawning in new thread
+                    try {
+                        while (!"STARTED".equals(stdoutBuffered.readLine()));
+                        stdoutSubscriber.onCompleted();
+                    } catch (IOException e) {
+                        stdoutSubscriber.onError(new RuntimeException("Something went wrong spawning " + toSpawn.host + ":" + toSpawn.port));
+                    }
+                });
+                spawnCompletable.await();
+                subscriber.onCompleted();
+            });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static RingNodeInfo spawnFirstNode() {
+    public static Single<RingNodeInfo> spawnFirstNode() {
         RingNodeInfo toSpawn = getNextNodeInfo();
-        spawn(toSpawn, null, null);
-        return toSpawn;
+        Completable spawnCompletable = spawn(toSpawn, null, null);
+        return spawnCompletable.andThen(Single.just(toSpawn));
     }
 
     private static RingNodeInfo getNextNodeInfo() {
@@ -108,7 +127,7 @@ public class Spawner {
         }
     }
 
-    public static void split(RingInfo ringInfo, LocalRepository localRepo) {
+    public static Completable split(RingInfo ringInfo, LocalRepository localRepo) {
 //        RangeMap<Integer, RingNodeInfo> selfMap = ringInfo.getMappings();
         LocalRepository selfRepo = localRepo;
 
@@ -145,7 +164,7 @@ public class Spawner {
         Node.LOGGER.debug("SPLIT - updated ring: " + ringInfo);
 
         // Spawn the other node
-        spawn(otherRingNodeInfo, ringInfo, otherMap);
+        return spawn(otherRingNodeInfo, ringInfo, otherMap);
     }
 
     // TODO: move methods to more appropriate location

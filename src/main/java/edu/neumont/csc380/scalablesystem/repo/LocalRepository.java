@@ -62,7 +62,7 @@ public class LocalRepository implements RxHallaStor {
                         try {
                             this.hallaStor.add(key, value);
                             this.keys.add(key);
-                            Node.LOGGER.info("...done putting " + key + " : " + value + ".");
+                            Node.LOGGER.debug("LOCAL_REPOSITORY - Put " + key + " : " + value + ".");
                             subscriber.onCompleted();
                         } catch (IllegalStateException e) {
                             subscriber.onError(new RepositoryFullException());
@@ -77,6 +77,7 @@ public class LocalRepository implements RxHallaStor {
         return Single
                 .create(subscriber -> {
                     Object value = this.hallaStor.get(key);
+                    Node.LOGGER.debug("LOCAL_REPOSITORY - Retrieved object " + value);
                     if (value == null) {
                         subscriber.onError(new KeyDoesNotExistException());
                     } else {
@@ -91,6 +92,7 @@ public class LocalRepository implements RxHallaStor {
                 .create(subscriber -> {
                     if (this.keys.contains(key)) {
                         this.hallaStor.update(key, value);
+                        Node.LOGGER.debug("LOCAL_REPOSITORY - Updated " + key + " to " + value);
                     } else {
                         subscriber.onError(new KeyDoesNotExistException());
                     }
@@ -105,6 +107,7 @@ public class LocalRepository implements RxHallaStor {
                     if (this.keys.contains(key)) {
                         this.hallaStor.delete(key);
                         this.keys.remove(key);
+                        Node.LOGGER.debug("LOCAL_REPOSITORY - Deleted " + key);
                     } else {
                         subscriber.onError(new KeyDoesNotExistException());
                     }

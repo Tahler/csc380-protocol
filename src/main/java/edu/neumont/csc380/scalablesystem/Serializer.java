@@ -15,8 +15,6 @@ public class Serializer {
             String tempFileName = tempFile.getName();
             Node.LOGGER.debug("Writing temp obj: " + object + " to " + tempFileName);
 
-            Node.LOGGER.debug("Writing temp obj: " + object + " to " + tempFileName);
-
             oos = new ObjectOutputStream(new FileOutputStream(tempFileName));
             oos.writeObject(object);
             oos.flush();
@@ -37,7 +35,6 @@ public class Serializer {
                 : tempFile.getName();
     }
 
-    // TODO: consider weirdness with RingInfo's rangemap being serializable
     public static <T> T consumeObjectFromTempFile(String fileName) {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName));

@@ -174,8 +174,10 @@ public class Node {
         });
     }
 
-    // TODO: redirect is broken
+    // TODO: redirect is broken?
     public static void main(String[] args) {
+        System.out.println("***STARTING MAIN***");
+
         if (args.length < 2) {
             throw new RuntimeException("Can't parse host and port");
         }
@@ -207,7 +209,11 @@ public class Node {
 
         node.start();
 
+        // Indicate that the node has started.
+        System.out.println("STARTED");
+
         LOGGER.info("...started.");
+        System.out.println("***ENDING MAIN***");
     }
 
     private static void preLoadNode(Node node, Map<String, Object> repo) {

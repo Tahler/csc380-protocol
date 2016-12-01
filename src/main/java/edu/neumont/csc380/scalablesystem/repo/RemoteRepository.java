@@ -39,7 +39,6 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
-        System.out.println("putting " + key + " : " + value);
         return this.makeRequest(new PutRequest(key, value))
                 .doOnSuccess(response -> {
                     Response.Type responseType = response.getType();
@@ -110,12 +109,10 @@ public class RemoteRepository implements RxHallaStor {
                         // send 0
                     } catch (NonEqualChecksumException e) {
                         e.printStackTrace();
-                        System.out.println("Retrying...");
                         // send 1
                     }
                 } while (response == null);
 
-                System.out.println(response);
                 subscriber.onSuccess(response);
             } catch (IOException e) {
                 e.printStackTrace();
