@@ -31,16 +31,21 @@ public class RingCoordinator implements RxHallaStor {
         if (repositoryWithKey instanceof RemoteRepository) {
             RingNodeInfo remoteNodeInfo = ((RemoteRepository) repositoryWithKey).remoteNodeInfo;
             Node.LOGGER.debug("Redirecting to " + remoteNodeInfo);
-        }
-        return repositoryWithKey.put(key, value)
-                .onErrorResumeNext(err -> {
-                    Node.LOGGER.debug("Repository is full. Splitting...");
-                    assert repositoryWithKey == this.localRepo;
+            return repositoryWithKey.put(key, value);
+        } else {
+            assert repositoryWithKey instanceof LocalRepository;
 
-                    Spawner.split(this.ringInfo, this.localRepo);
-                    // Try again.
-                    return this.localRepo.put(key, value);
-                });
+            return repositoryWithKey
+                    .put(key, value)
+                    .onErrorResumeNext(err -> {
+                        Node.LOGGER.debug("Local repository is full. Splitting...");
+                        assert repositoryWithKey == this.localRepo;
+
+                        Spawner.split(this.ringInfo, this.localRepo);
+                        // Try again.
+                        return this.localRepo.put(key, value);
+                    });
+        }
     }
 
     @Override
@@ -63,6 +68,7 @@ public class RingCoordinator implements RxHallaStor {
 
     private RxHallaStor getRepoWithKey(String key) {
         RingNodeInfo nodeWithKey = this.ringInfo.getNodeWithKey(key);
+        Node.LOGGER.debug("RingCoordinator: " + key + "(" + key.hashCode() + ") belongs to " + nodeWithKey);
         RxHallaStor repoWithKey = nodeWithKey.equals(this.localInfo)
                 ? this.localRepo
                 : new RemoteRepository(nodeWithKey);

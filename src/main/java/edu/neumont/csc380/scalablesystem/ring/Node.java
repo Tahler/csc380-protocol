@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -173,6 +174,7 @@ public class Node {
         });
     }
 
+    // TODO: redirect is broken
     public static void main(String[] args) {
         if (args.length < 2) {
             throw new RuntimeException("Can't parse host and port");
@@ -182,18 +184,25 @@ public class Node {
         int port = Integer.parseInt(args[1]);
 
         LOGGER = createLogger(port + ".log");
+        LOGGER.info("MAIN launching with " + Arrays.toString(args));
         LOGGER.info(String.format("Starting node at %s:%d...", host, port));
 
-        Node node = new Node(host, port);
-
+        Node node;
         if (args.length == 4) {
-            String repoFile = args[2];
-            Map<String, Object> repo = Serializer.consumeObjectFromTempFile(repoFile);
-
-            String ringInfoFile = args[3];
+            LOGGER.debug("getting ready!!!");
+            String ringInfoFile = args[2];
+            LOGGER.debug("Loading ring info from " + ringInfoFile);
             RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
 
-            preLoadNode(node, repo, ringInfo);
+            LOGGER.debug("getting ready 2!!!");
+            String repoFile = args[3];
+            LOGGER.debug("Loading repo from " + repoFile);
+            Map<String, Object> repo = Serializer.consumeObjectFromTempFile(repoFile);
+
+            node = new Node(host, port, new LocalRepository(), ringInfo);
+            preLoadNode(node, repo);
+        } else {
+            node = new Node(host, port);
         }
 
         node.start();
@@ -201,7 +210,7 @@ public class Node {
         LOGGER.info("...started.");
     }
 
-    private static void preLoadNode(Node node, Map<String, Object> repo, RingInfo ringInfo) {
+    private static void preLoadNode(Node node, Map<String, Object> repo) {
         Collection<Completable> all = new ArrayList<>(repo.size());
         for (Map.Entry<String, Object> entry : repo.entrySet()) {
             Completable toDo = node.repository.put(entry.getKey(), entry.getValue());

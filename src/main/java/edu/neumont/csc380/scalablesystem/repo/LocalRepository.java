@@ -1,6 +1,7 @@
 package edu.neumont.csc380.scalablesystem.repo;
 
 import com.hallaLib.HallaStor;
+import edu.neumont.csc380.scalablesystem.comparator.HashComparator;
 import edu.neumont.csc380.scalablesystem.ring.Node;
 import rx.Completable;
 import rx.Observable;
@@ -16,7 +17,7 @@ public class LocalRepository implements RxHallaStor {
     private final HallaStor hallaStor;
 
     public LocalRepository() {
-        this.keys = new TreeSet<>();
+        this.keys = new TreeSet<>(new HashComparator<>());
         this.hallaStor = HallaStor.getInstance();
     }
 

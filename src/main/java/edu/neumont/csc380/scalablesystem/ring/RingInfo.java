@@ -3,6 +3,7 @@ package edu.neumont.csc380.scalablesystem.ring;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
+import com.google.common.collect.TreeRangeMap;
 import edu.neumont.csc380.scalablesystem.Config;
 
 import java.io.Serializable;
@@ -21,10 +22,10 @@ public class RingInfo implements Serializable {
         this(
                 System.currentTimeMillis(),
                 // TODO: this needs to coordinate with Spawner, will be hard with replication
-                get());
+                getFullRange());
     }
 
-    public static RangeMap<Integer, RingNodeInfo> get() {
+    public static RangeMap<Integer, RingNodeInfo> getFullRange() {
         return ImmutableRangeMap.of(Range.all(), new RingNodeInfo(Config.HOST, Config.START_PORT));
     }
 
@@ -38,6 +39,30 @@ public class RingInfo implements Serializable {
         return this.mappings.get(hash);
     }
 
+    public void addNode(Range<Integer> range, RingNodeInfo node) {
+        TreeRangeMap<Integer, RingNodeInfo> withAdded = TreeRangeMap.create();
+        withAdded.putAll(this.mappings);
+        try {
+            withAdded.put(range, node);
+        } catch (Exception e) {
+            Node.LOGGER.fatal(e);
+        }
+        //        ImmutableRangeMap.Builder<Integer, RingNodeInfo> builder = ImmutableRangeMap.builder();
+//        Node.LOGGER.debug("builder - created: ");
+//        builder.putAll(this.mappings);
+//        Node.LOGGER.debug("builder - copied: ");
+//        try {
+//            builder.put(range, node);
+//        } catch (Exception e){
+//            Node.LOGGER.fatal(e);
+//        }
+//        Node.LOGGER.debug("builder - added: ");
+//        this.mappings = builder.build();
+//        Node.LOGGER.debug("builder - built: ");
+        this.mappings = ImmutableRangeMap.copyOf(withAdded);
+        this.timestamp();
+    }
+
     public long getTimestamp() {
         return this.timestamp;
     }
@@ -46,11 +71,19 @@ public class RingInfo implements Serializable {
         return this.mappings;
     }
 
-    public void timestamp() {
+    private void timestamp() {
         this.timestamp = System.currentTimeMillis();
     }
 
-//    public void update(RingInfo other) {
+    @Override
+    public String toString() {
+        return "RingInfo{" +
+                "timestamp=" + timestamp +
+                ", mappings=" + mappings +
+                '}';
+    }
+
+    //    public void update(RingInfo other) {
 //        if (other.timestamp > this.timestamp) {
 //            this.mappings = other.mappings;
 //        }

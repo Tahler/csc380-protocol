@@ -1,6 +1,8 @@
 package edu.neumont.csc380.scalablesystem.ring;
 
-public class RingNodeInfo {
+import java.io.Serializable;
+
+public class RingNodeInfo implements Serializable    {
     public final String host;
     public final int port;
 

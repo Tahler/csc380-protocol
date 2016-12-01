@@ -20,27 +20,32 @@ public class Main {
 
         LOGGER.trace("Spawned first node.");
 
-        Thread.sleep(5000);
+        Thread.sleep(3000);
 
         RemoteRepository repo = new RemoteRepository(firstNode);
-        // TODO: no error on put with same key
+        // TODO: no error here on put with same key
         Completable
                 .merge(
                         repo.put("d1", new Driver(1, "bob", 42, true)),
                         repo.put("d2", new Driver(1, "joe", 42, true)),
-                        repo.put("d3", new Driver(1, "joe", 42, true)),
-                        repo.put("d4", new Driver(1, "joe", 42, true)),
-                        repo.put("d5", new Driver(1, "joe", 42, true)),
                         repo.put("d6", new Driver(1, "joe", 42, true)),
-                        repo.put("d7", new Driver(1, "joe", 42, true)),
                         repo.put("d8", new Driver(1, "joe", 42, true)),
+                        repo.put("d4", new Driver(1, "joe", 42, true)),
+                        repo.put("d7", new Driver(1, "joe", 42, true)),
+                        repo.put("d3", new Driver(1, "joe", 42, true)),
+                        repo.put("d5", new Driver(1, "joe", 42, true)),
                         repo.put("d9", new Driver(1, "joe", 42, true)),
                         repo.put("d10", new Driver(1, "emile", 42, true)),
                         repo.put("d11", new Driver(1, "emile", 42, true)),
                         repo.put("d12", new Driver(1, "emile", 42, true)),
                         repo.put("d13", new Driver(1, "emile", 42, true)),
                         repo.put("d14", new Driver(1, "emile", 42, true)),
-                        repo.put("d15", new Driver(1, "emile", 42, true)))
+                        repo.put("d15", new Driver(1, "emile", 42, true)),
+                        repo.put("d16", new Driver(1, "emile", 42, true)),
+                        repo.put("d17", new Driver(1, "emile", 42, true)),
+                        repo.put("d18", new Driver(1, "emile", 42, true)),
+                        repo.put("d19", new Driver(1, "emile", 42, true)),
+                        repo.put("d20", new Driver(1, "emile", 42, true)))
                 .doOnError(System.out::println)
                 .subscribe();
     }
