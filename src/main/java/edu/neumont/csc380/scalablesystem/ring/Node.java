@@ -32,11 +32,13 @@ public class Node {
     private boolean running;
 
     public Node(String host, int port, RingInfo info) {
+        Env.LOGGER.debug("INSTANTIATING NODE");
         this.info = new RingNodeInfo(host, port);
         VnodeRepository vnodeRepo = new VnodeRepository(this.info);
         this.localRepo = new LocalRepository(vnodeRepo);
         this.ringRepo = new RingCoordinator(vnodeRepo, info);
         this.running = false;
+        Env.LOGGER.debug("Created node at " + this.info);
     }
 
     public void start() {
@@ -96,7 +98,9 @@ public class Node {
 
     private void handleIntercomRequest(Socket client) {
         RequestReader requestReader = new RequestReader(client);
+        Env.LOGGER.debug("reading intercom request...");
         Request request = requestReader.readRequest();
+        Env.LOGGER.debug("...done.");
         this.handleRequest(this.localRepo, request)
                 .subscribe(response -> {
                     ResponseWriter responseWriter = new ResponseWriter(client);
@@ -200,33 +204,37 @@ public class Node {
     }
 
     public static void main(String[] args) {
-        System.out.println("***STARTING MAIN***");
+        try {
+            System.out.println("***STARTING MAIN***");
 
-        String host = args[0];
-        int port = Integer.parseInt(args[1]);
+            String host = args[0];
+            int port = Integer.parseInt(args[1]);
 
-        Env.LOGGER = createLogger(port + ".log");
-        Env.LOGGER.info("MAIN launching with " + Arrays.toString(args));
-        Env.LOGGER.info(String.format("Starting node at %s:%d...", host, port));
+            Env.LOGGER = createLogger(port + ".log");
+            Env.LOGGER.info("MAIN launching with " + Arrays.toString(args));
+            Env.LOGGER.info(String.format("Starting node at %s:%d...", host, port));
 
-        Env.LOGGER.debug("getting ready!!!");
-        String ringInfoFile = args[2];
-        Env.LOGGER.debug("Loading ring info from " + ringInfoFile);
-        RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
+            Env.LOGGER.debug("getting ready!!!");
+            String ringInfoFile = args[2];
+            Env.LOGGER.debug("Loading ring info from " + ringInfoFile);
+            RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
 
 //        Env.LOGGER.debug("getting ready 2!!!");
 //        String vnodeKeysFile = args[3];
 //        Env.LOGGER.debug("Loading vnode key set from " + vnodeKeysFile);
 //        Set<String> vnodeKeySet = Serializer.consumeObjectFromTempFile(vnodeKeysFile);
 
-        Node node = new Node(host, port, ringInfo);
-        node.start();
+            Node node = new Node(host, port, ringInfo);
+            node.start();
 
-        // Indicate that the node has started.
-        System.out.println("STARTED");
+            // Indicate that the node has started.
+            System.out.println("STARTED");
 
-        Env.LOGGER.info("...started.");
-        System.out.println("***ENDING MAIN***");
+            Env.LOGGER.info("...started.");
+            System.out.println("***ENDING MAIN***");
+        } catch (Exception e) {
+            Env.LOGGER.fatal(e);
+        }
     }
 
     private static Logger createLogger(String fileName) {

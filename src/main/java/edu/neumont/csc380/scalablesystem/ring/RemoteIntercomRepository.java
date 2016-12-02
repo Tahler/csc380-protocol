@@ -84,6 +84,7 @@ public class RemoteIntercomRepository implements RxHallaStor {
 
     @Override
     public Completable delete(String key) {
+        Env.LOGGER.debug("sanity check");
         return this.makeIntercomRequest(new DeleteRequest(key))
                 .doOnSuccess(response -> {
                     if (response.getType() != Response.Type.DELETE_SUCCESS) {
@@ -94,7 +95,8 @@ public class RemoteIntercomRepository implements RxHallaStor {
     }
 
     protected Single<Response> makeIntercomRequest(Request request) {
-        Socket connection = getSocket(this.remoteNodeInfo.host, this.remoteNodeInfo.intercomPort);
+        Env.LOGGER.debug("Intercom (" + this.remoteNodeInfo.port + ") : making request " + request);
+        Socket connection = getDirectConnection(this.remoteNodeInfo.host, this.remoteNodeInfo.intercomPort);
         return RemoteRepository.writeRequest(connection, request);
     }
 
@@ -105,7 +107,7 @@ public class RemoteIntercomRepository implements RxHallaStor {
                 '}';
     }
 
-    private static Socket getSocket(String host, int port) {
+    private static Socket getDirectConnection(String host, int port) {
         try {
             return new Socket(host, port);
         } catch (IOException e) {

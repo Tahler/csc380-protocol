@@ -33,9 +33,10 @@ public class Main {
                                     repo.put("d10", new Driver(1, "emile", 42, true)),
                                     repo.put("d11", new Driver(1, "emile", 42, true)),
                                     repo.put("d12", new Driver(1, "emile", 42, true)),
+                                    repo.put("d13", new Driver(1, "emile", 42, true)),
                                     repo.put("d14", new Driver(1, "emile", 42, true)),
-                                    repo.put("d15", new Driver(1, "snowflake15", 42, true)))
-//                                    repo.put("d16", new Driver(1, "emile", 42, true))
+                                    repo.put("d15", new Driver(1, "snowflake15", 42, true)),
+                                    repo.put("d16", new Driver(1, "emile", 42, true)))
 //                                    repo.put("d17", new Driver(1, "emile", 42, true)),
 //                                    repo.put("d18", new Driver(1, "emile", 42, true)),
 //                                    repo.put("d19", new Driver(1, "emile", 42, true)),

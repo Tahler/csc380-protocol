@@ -24,4 +24,12 @@ public abstract class Request {
         UPDATE,
         DELETE
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "type=" + type +
+                ", key='" + key + '\'' +
+                '}';
+    }
 }

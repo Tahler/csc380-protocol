@@ -81,7 +81,10 @@ public class LocalRepository implements RxHallaStor {
             if (this.hallaStor.containsKey(key)) {
                 this.hallaStor.delete(key);
                 Env.LOGGER.debug("LOCAL_REPOSITORY - Physically deleted " + key);
+            } else {
+                Env.LOGGER.debug("LOCAL_REPOSITORY - skipping... does not physically contain key");
             }
+            subscriber.onCompleted();
         });
     }
 }

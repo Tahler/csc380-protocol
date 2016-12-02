@@ -1,5 +1,6 @@
 package edu.neumont.csc380.scalablesystem.ring;
 
+import edu.neumont.csc380.scalablesystem.logging.Env;
 import edu.neumont.csc380.scalablesystem.protocol.request.*;
 import edu.neumont.csc380.scalablesystem.protocol.response.ContainsKeySuccessResponse;
 import edu.neumont.csc380.scalablesystem.protocol.response.GetSuccessResponse;
@@ -93,6 +94,7 @@ public class RemoteRepository implements RxHallaStor {
     }
 
     protected Single<Response> makeRequest(Request request) {
+        Env.LOGGER.debug("REMOTE_REPO : Making request " + request + " to " + this.remoteNodeInfo);
         Socket connection = getSocket(this.remoteNodeInfo.host, this.remoteNodeInfo.port);
         return writeRequest(connection, request);
     }
