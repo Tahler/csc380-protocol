@@ -38,8 +38,6 @@ public class RemoteIntercomRepository implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
-        Env.LOGGER.debug("Intercom (" + this.remoteNodeInfo.intercomPort + ") : putting " + key + " : " + value);
-
         return this.makeIntercomRequest(new PutRequest(key, value))
                 .doOnSuccess(response -> {
                     Response.Type responseType = response.getType();
@@ -95,7 +93,7 @@ public class RemoteIntercomRepository implements RxHallaStor {
     }
 
     protected Single<Response> makeIntercomRequest(Request request) {
-        Env.LOGGER.debug("Intercom (" + this.remoteNodeInfo.port + ") : making request " + request);
+        Env.LOGGER.debug("Intercom (" + this.remoteNodeInfo.intercomPort + ") : making request " + request);
         Socket connection = getDirectConnection(this.remoteNodeInfo.host, this.remoteNodeInfo.intercomPort);
         return RemoteRepository.writeRequest(connection, request);
     }

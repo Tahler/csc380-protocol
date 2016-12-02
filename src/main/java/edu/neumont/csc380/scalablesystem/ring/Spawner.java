@@ -167,9 +167,9 @@ public class Spawner {
                         spawnVnode(otherRingNodeInfo, ringInfo).await();
 
                         // Add all kvps
-                        RemoteIntercomRepository intercom = new RemoteIntercomRepository(otherRingNodeInfo);
+                        RemoteRepository otherVnode = new RemoteRepository(otherRingNodeInfo);
                         List<Completable> puts = otherMap.entrySet().stream()
-                                .map(otherEntry -> intercom.put(otherEntry.getKey(), otherEntry.getValue()))
+                                .map(otherEntry -> otherVnode.put(otherEntry.getKey(), otherEntry.getValue()))
                                 .collect(Collectors.toList());
 
                         Completable.merge(puts).subscribe(subscriber::onCompleted);
