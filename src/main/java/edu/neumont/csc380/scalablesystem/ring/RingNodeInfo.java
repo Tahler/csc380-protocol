@@ -5,10 +5,12 @@ import java.io.Serializable;
 public class RingNodeInfo implements Serializable    {
     public final String host;
     public final int port;
+    public final int intercomPort;
 
     public RingNodeInfo(String host, int port) {
         this.host = host;
         this.port = port;
+        this.intercomPort = port + 1;
     }
 
     public String getHost() {
@@ -16,6 +18,10 @@ public class RingNodeInfo implements Serializable    {
     }
 
     public int getPort() {
+        return this.port;
+    }
+
+    public int getIntercomPort() {
         return this.port;
     }
 

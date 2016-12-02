@@ -1,7 +1,7 @@
 package edu.neumont.csc380.scalablesystem;
 
 import edu.neumont.csc380.scalablesystem.io.Files;
-import edu.neumont.csc380.scalablesystem.ring.Node;
+import edu.neumont.csc380.scalablesystem.logging.Env;
 
 import java.io.*;
 
@@ -10,16 +10,16 @@ public class Serializer {
         File tempFile = null;
         ObjectOutputStream oos = null;
         try {
-            Node.LOGGER.debug("creating temp file");
+            Env.LOGGER.debug("creating temp file");
             tempFile = File.createTempFile("tmp", ".obj");
             String tempFileName = tempFile.getName();
-            Node.LOGGER.debug("Writing temp obj: " + object + " to " + tempFileName);
+            Env.LOGGER.debug("Writing temp obj: " + object + " to " + tempFileName);
 
             oos = new ObjectOutputStream(new FileOutputStream(tempFileName));
             oos.writeObject(object);
             oos.flush();
         } catch (IOException e) {
-            Node.LOGGER.debug("aw shit it was " + e.getMessage());
+            Env.LOGGER.debug("aw shit it was " + e.getMessage());
             e.printStackTrace();
         } finally {
             if (oos != null) {
@@ -39,14 +39,14 @@ public class Serializer {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName));
             Object readObject = ois.readObject();
-            Node.LOGGER.debug("deleting " + fileName + "...");
+            Env.LOGGER.debug("deleting " + fileName + "...");
             Files.deleteFileIfExists(fileName);
-            Node.LOGGER.debug("...deleted " + fileName + ".");
+            Env.LOGGER.debug("...deleted " + fileName + ".");
             T decoded = (T) readObject;
-            Node.LOGGER.debug("cast to " + decoded);
+            Env.LOGGER.debug("cast to " + decoded);
             return decoded;
         } catch (Exception e) {
-            Node.LOGGER.fatal(e);
+            Env.LOGGER.fatal(e);
             throw new RuntimeException(e);
         }
     }

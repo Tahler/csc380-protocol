@@ -2,13 +2,14 @@ package edu.neumont.csc380.scalablesystem.ring;
 
 import edu.neumont.csc380.scalablesystem.Serializer;
 import edu.neumont.csc380.scalablesystem.io.Files;
+import edu.neumont.csc380.scalablesystem.logging.Env;
 import edu.neumont.csc380.scalablesystem.protocol.request.PutRequest;
 import edu.neumont.csc380.scalablesystem.protocol.request.Request;
 import edu.neumont.csc380.scalablesystem.protocol.request.UpdateRequest;
 import edu.neumont.csc380.scalablesystem.protocol.response.*;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestReader;
 import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseWriter;
-import edu.neumont.csc380.scalablesystem.repo.*;
+import edu.neumont.csc380.scalablesystem.ring.repo.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -17,30 +18,25 @@ import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
-import rx.Completable;
 import rx.Single;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 public class Node {
     private final RingNodeInfo info;
-    private final RxHallaStor repository;
+    private final LocalRepository localRepo;
+    private final RingCoordinator ringRepo;
     private boolean running;
 
-    public Node(String host, int port, LocalRepository localRepo, RingInfo info) {
+    public Node(String host, int port, RingInfo info) {
         this.info = new RingNodeInfo(host, port);
-        this.repository = new RingCoordinator(this.info, localRepo, info);
+        VnodeRepository vnodeRepo = new VnodeRepository(this.info);
+        this.localRepo = new LocalRepository(vnodeRepo);
+        this.ringRepo = new RingCoordinator(vnodeRepo, info);
         this.running = false;
-    }
-
-    public Node(String host, int port) {
-        this(host, port, new LocalRepository(), new RingInfo());
     }
 
     public void start() {
@@ -48,58 +44,87 @@ public class Node {
     }
 
     private void listen() {
-        try {
-            ServerSocket server = new ServerSocket(this.info.port);
-            LOGGER.info("Listening on port " + this.info.port);
+        this.running = true;
+        new Thread(() -> {
+            try {
+                ServerSocket server = new ServerSocket(this.info.port);
+                Env.LOGGER.info("Listening on port " + this.info.port);
 
-            this.running = true;
-            while (this.running) {
-                Socket client = server.accept();
-                LOGGER.debug("Received request.");
+                while (this.running) {
+                    Socket client = server.accept();
+                    Env.LOGGER.debug("Received request.");
 
-                new Thread(() -> this.handle(client)).start();
+                    new Thread(() -> this.handleRequest(client)).start();
+                }
+            } catch (IOException e) {
+                Env.LOGGER.fatal("Failed to start server on port 3000.");
+                Env.LOGGER.fatal(e.getMessage());
             }
-        } catch (IOException e) {
-            LOGGER.fatal("Failed to start server on port 3000.");
-            LOGGER.fatal(e.getMessage());
-        }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                ServerSocket intercomServer = new ServerSocket(this.info.intercomPort);
+                Env.LOGGER.info("Listening for intercom on port " + this.info.intercomPort);
+
+                while (this.running) {
+                    Socket client = intercomServer.accept();
+                    Env.LOGGER.debug("Received intercom request.");
+
+                    new Thread(() -> this.handleIntercomRequest(client)).start();
+                }
+            } catch (IOException e) {
+                Env.LOGGER.fatal("Failed to start server on port 3001.");
+                Env.LOGGER.fatal(e.getMessage());
+            }
+        }).start();
     }
 
     public void stop() {
         this.running = false;
     }
 
-    private void handle(Socket client) {
+    private void handleRequest(Socket client) {
         RequestReader requestReader = new RequestReader(client);
         Request request = requestReader.readRequest();
-        this.handleRequest(request)
+        this.handleRequest(this.ringRepo, request)
                 .subscribe(response -> {
                     ResponseWriter responseWriter = new ResponseWriter(client);
                     responseWriter.writeResponse(response);
                 });
     }
 
-    private Single<Response> handleRequest(Request request) {
+    private void handleIntercomRequest(Socket client) {
+        RequestReader requestReader = new RequestReader(client);
+        Request request = requestReader.readRequest();
+        this.handleRequest(this.localRepo, request)
+                .subscribe(response -> {
+                    ResponseWriter responseWriter = new ResponseWriter(client);
+                    responseWriter.writeResponse(response);
+                });
+    }
+
+    private Single<Response> handleRequest(RxHallaStor repo, Request request) {
         Request.Type operation = request.getType();
-        LOGGER.debug("Handling " + operation);
+        Env.LOGGER.debug("Handling " + operation);
         Single<Response> response;
         switch (operation) {
             case CONTAINS_KEY:
-                response = this.responseForContainsKey(request.getKey());
+                response = this.responseForContainsKey(repo, request.getKey());
                 break;
             case GET:
-                response = this.responseForGet(request.getKey());
+                response = this.responseForGet(repo, request.getKey());
                 break;
             case PUT:
                 PutRequest putRequest = (PutRequest) request;
-                response = this.responseForPut(putRequest.getKey(), putRequest.getValue());
+                response = this.responseForPut(repo, putRequest.getKey(), putRequest.getValue());
                 break;
             case UPDATE:
                 UpdateRequest updateRequest = (UpdateRequest) request;
-                response = this.responseForUpdate(updateRequest.getKey(), updateRequest.getValue());
+                response = this.responseForUpdate(repo, updateRequest.getKey(), updateRequest.getValue());
                 break;
             case DELETE:
-                response = this.responseForDelete(request.getKey());
+                response = this.responseForDelete(repo, request.getKey());
                 break;
             default:
                 throw new RuntimeException("Impossible request type: " + operation);
@@ -107,14 +132,14 @@ public class Node {
         return response;
     }
 
-    private Single<Response> responseForContainsKey(String key) {
-        return this.repository.containsKey(key)
+    private Single<Response> responseForContainsKey(RxHallaStor repo, String key) {
+        return repo.containsKey(key)
                 .map(ContainsKeySuccessResponse::new);
     }
 
-    private Single<Response> responseForPut(String key, Object value) {
+    private Single<Response> responseForPut(RxHallaStor repo, String key, Object value) {
         return Single.create(subscriber -> {
-            this.repository.put(key, value)
+            repo.put(key, value)
                     .subscribe(
                             () -> subscriber.onSuccess(new PutSuccessResponse()),
                             err -> {
@@ -129,9 +154,9 @@ public class Node {
         });
     }
 
-    private Single<Response> responseForGet(String key) {
+    private Single<Response> responseForGet(RxHallaStor repo, String key) {
         return Single.create(subscriber -> {
-            this.repository.get(key)
+            repo.get(key)
                     .subscribe(
                             val -> subscriber.onSuccess(new GetSuccessResponse(val)),
                             err -> {
@@ -144,9 +169,9 @@ public class Node {
         });
     }
 
-    private Single<Response> responseForUpdate(String key, Object value) {
+    private Single<Response> responseForUpdate(RxHallaStor repo, String key, Object value) {
         return Single.create(subscriber -> {
-            this.repository.update(key, value)
+            repo.update(key, value)
                     .subscribe(
                             () -> subscriber.onSuccess(new UpdateSuccessResponse()),
                             err -> {
@@ -159,9 +184,9 @@ public class Node {
         });
     }
 
-    private Single<Response> responseForDelete(String key) {
+    private Single<Response> responseForDelete(RxHallaStor repo, String key) {
         return Single.create(subscriber -> {
-            this.repository.delete(key)
+            repo.delete(key)
                     .subscribe(
                             () -> subscriber.onSuccess(new DeleteSuccessResponse()),
                             err -> {
@@ -174,58 +199,36 @@ public class Node {
         });
     }
 
-    // TODO: redirect is broken?
     public static void main(String[] args) {
         System.out.println("***STARTING MAIN***");
-
-        if (args.length < 2) {
-            throw new RuntimeException("Can't parse host and port");
-        }
 
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-        LOGGER = createLogger(port + ".log");
-        LOGGER.info("MAIN launching with " + Arrays.toString(args));
-        LOGGER.info(String.format("Starting node at %s:%d...", host, port));
+        Env.LOGGER = createLogger(port + ".log");
+        Env.LOGGER.info("MAIN launching with " + Arrays.toString(args));
+        Env.LOGGER.info(String.format("Starting node at %s:%d...", host, port));
 
-        Node node;
-        if (args.length == 4) {
-            LOGGER.debug("getting ready!!!");
-            String ringInfoFile = args[2];
-            LOGGER.debug("Loading ring info from " + ringInfoFile);
-            RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
+        Env.LOGGER.debug("getting ready!!!");
+        String ringInfoFile = args[2];
+        Env.LOGGER.debug("Loading ring info from " + ringInfoFile);
+        RingInfo ringInfo = Serializer.consumeObjectFromTempFile(ringInfoFile);
 
-            LOGGER.debug("getting ready 2!!!");
-            String repoFile = args[3];
-            LOGGER.debug("Loading repo from " + repoFile);
-            Map<String, Object> repo = Serializer.consumeObjectFromTempFile(repoFile);
+//        Env.LOGGER.debug("getting ready 2!!!");
+//        String vnodeKeysFile = args[3];
+//        Env.LOGGER.debug("Loading vnode key set from " + vnodeKeysFile);
+//        Set<String> vnodeKeySet = Serializer.consumeObjectFromTempFile(vnodeKeysFile);
 
-            node = new Node(host, port, new LocalRepository(), ringInfo);
-            preLoadNode(node, repo);
-        } else {
-            node = new Node(host, port);
-        }
-
+        Node node = new Node(host, port, ringInfo);
         node.start();
 
         // Indicate that the node has started.
         System.out.println("STARTED");
 
-        LOGGER.info("...started.");
+        Env.LOGGER.info("...started.");
         System.out.println("***ENDING MAIN***");
     }
 
-    private static void preLoadNode(Node node, Map<String, Object> repo) {
-        Collection<Completable> all = new ArrayList<>(repo.size());
-        for (Map.Entry<String, Object> entry : repo.entrySet()) {
-            Completable toDo = node.repository.put(entry.getKey(), entry.getValue());
-            all.add(toDo);
-        }
-        Completable.merge(all).toObservable().toBlocking();
-    }
-
-    public static Logger LOGGER;
     private static Logger createLogger(String fileName) {
         String logFilePath = String.format("logs/%s", fileName);
         Files.deleteFileIfExists(logFilePath);
@@ -258,7 +261,7 @@ public class Node {
 
     @Override
     protected void finalize() throws Throwable {
-        LOGGER.fatal("Stopping...");
+        Env.LOGGER.fatal("Stopping...");
         super.finalize();
     }
 }

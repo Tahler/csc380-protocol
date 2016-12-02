@@ -1,4 +1,4 @@
-package edu.neumont.csc380.scalablesystem.repo;
+package edu.neumont.csc380.scalablesystem.ring.repo;
 
 import rx.Completable;
 import rx.Single;

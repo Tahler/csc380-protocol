@@ -2,8 +2,8 @@ package edu.neumont.csc380.scalablesystem;
 
 import edu.neumont.csc380.scalablesystem.models.Driver;
 import edu.neumont.csc380.scalablesystem.models.Racecar;
-import edu.neumont.csc380.scalablesystem.repo.RemoteRepository;
-import edu.neumont.csc380.scalablesystem.repo.RepositoryFullException;
+import edu.neumont.csc380.scalablesystem.ring.RemoteRepository;
+import edu.neumont.csc380.scalablesystem.ring.repo.RepositoryFullException;
 import edu.neumont.csc380.scalablesystem.models.TypedObject;
 import edu.neumont.csc380.scalablesystem.protocol.Protocol;
 import edu.neumont.csc380.scalablesystem.ring.RingNodeInfo;

@@ -13,6 +13,7 @@ import java.io.Serializable;
  */
 public class RingInfo implements Serializable {
     private long timestamp;
+    // Hash range to first sub node of vnodes
     private RangeMap<Integer, RingNodeInfo> mappings;
 
     /**
@@ -42,23 +43,7 @@ public class RingInfo implements Serializable {
     public void addNode(Range<Integer> range, RingNodeInfo node) {
         TreeRangeMap<Integer, RingNodeInfo> withAdded = TreeRangeMap.create();
         withAdded.putAll(this.mappings);
-        try {
-            withAdded.put(range, node);
-        } catch (Exception e) {
-            Node.LOGGER.fatal(e);
-        }
-        //        ImmutableRangeMap.Builder<Integer, RingNodeInfo> builder = ImmutableRangeMap.builder();
-//        Node.LOGGER.debug("builder - created: ");
-//        builder.putAll(this.mappings);
-//        Node.LOGGER.debug("builder - copied: ");
-//        try {
-//            builder.put(range, node);
-//        } catch (Exception e){
-//            Node.LOGGER.fatal(e);
-//        }
-//        Node.LOGGER.debug("builder - added: ");
-//        this.mappings = builder.build();
-//        Node.LOGGER.debug("builder - built: ");
+        withAdded.put(range, node);
         this.mappings = ImmutableRangeMap.copyOf(withAdded);
         this.timestamp();
     }
@@ -83,15 +68,7 @@ public class RingInfo implements Serializable {
                 '}';
     }
 
-    //    public void update(RingInfo other) {
-//        if (other.timestamp > this.timestamp) {
-//            this.mappings = other.mappings;
-//        }
-//    }
-
-//    private static class HashRange {
-//        public static Range<Integer> from(int lower, int upper) {
-//            return Range.closedOpen(lower, upper);
-//        }
-//    }
+    public static RingNodeInfo getNextNodeInRing(RingNodeInfo currentNodeInfo) {
+        return new RingNodeInfo(currentNodeInfo.host, currentNodeInfo.port + 2);
+    }
 }

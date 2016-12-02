@@ -1,30 +1,29 @@
-package edu.neumont.csc380.scalablesystem.repo;
+package edu.neumont.csc380.scalablesystem.ring;
 
-import edu.neumont.csc380.scalablesystem.protocol.checksum.NonEqualChecksumException;
+import edu.neumont.csc380.scalablesystem.logging.Env;
 import edu.neumont.csc380.scalablesystem.protocol.request.*;
 import edu.neumont.csc380.scalablesystem.protocol.response.ContainsKeySuccessResponse;
 import edu.neumont.csc380.scalablesystem.protocol.response.GetSuccessResponse;
 import edu.neumont.csc380.scalablesystem.protocol.response.Response;
-import edu.neumont.csc380.scalablesystem.protocol.serialization.RequestWriter;
-import edu.neumont.csc380.scalablesystem.protocol.serialization.ResponseReader;
-import edu.neumont.csc380.scalablesystem.ring.RingNodeInfo;
+import edu.neumont.csc380.scalablesystem.ring.repo.RepositoryFullException;
+import edu.neumont.csc380.scalablesystem.ring.repo.RxHallaStor;
 import rx.Completable;
 import rx.Single;
 
 import java.io.IOException;
 import java.net.Socket;
 
-// TODO: if it doesn't respond, just try the next nodeinfo
-public class RemoteRepository implements RxHallaStor {
+// Lots of copied code from RemoteRepository
+public class RemoteIntercomRepository implements RxHallaStor {
     public final RingNodeInfo remoteNodeInfo;
 
-    public RemoteRepository(RingNodeInfo remoteNodeInfo) {
+    public RemoteIntercomRepository(RingNodeInfo remoteNodeInfo) {
         this.remoteNodeInfo = remoteNodeInfo;
     }
 
     @Override
     public Single<Boolean> containsKey(String key) {
-        return this.makeRequest(new ContainsKeyRequest(key))
+        return this.makeIntercomRequest(new ContainsKeyRequest(key))
                 .map(response -> {
                     boolean containsKey;
                     if (response.getType() == Response.Type.CONTAINS_KEY_SUCCESS) {
@@ -39,7 +38,9 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Completable put(String key, Object value) {
-        return this.makeRequest(new PutRequest(key, value))
+        Env.LOGGER.debug("Intercom (" + this.remoteNodeInfo.intercomPort + ") : putting " + key + " : " + value);
+
+        return this.makeIntercomRequest(new PutRequest(key, value))
                 .doOnSuccess(response -> {
                     Response.Type responseType = response.getType();
 
@@ -56,7 +57,7 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Single<Object> get(String key) {
-        return this.makeRequest(new GetRequest(key))
+        return this.makeIntercomRequest(new GetRequest(key))
                 .map(response -> {
                     Object value;
                     if (response.getType() == Response.Type.GET_SUCCESS) {
@@ -72,7 +73,7 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Completable update(String key, Object value) {
-        return this.makeRequest(new UpdateRequest(key, value))
+        return this.makeIntercomRequest(new UpdateRequest(key, value))
                 .doOnSuccess(response -> {
                     if (response.getType() != Response.Type.UPDATE_SUCCESS) {
                         throw new RuntimeException("Server returned bad response: " + response.getType());
@@ -83,7 +84,7 @@ public class RemoteRepository implements RxHallaStor {
 
     @Override
     public Completable delete(String key) {
-        return this.makeRequest(new DeleteRequest(key))
+        return this.makeIntercomRequest(new DeleteRequest(key))
                 .doOnSuccess(response -> {
                     if (response.getType() != Response.Type.DELETE_SUCCESS) {
                         throw new RuntimeException("Server returned bad response: " + response.getType());
@@ -92,32 +93,23 @@ public class RemoteRepository implements RxHallaStor {
                 .toCompletable();
     }
 
-    private Single<Response> makeRequest(Request request) {
-        return Single.create(subscriber -> {
-            try (
-                    Socket connection = new Socket(this.remoteNodeInfo.host, this.remoteNodeInfo.port)
-            ) {
-                RequestWriter requestWriter = new RequestWriter(connection);
+    protected Single<Response> makeIntercomRequest(Request request) {
+        Socket connection = getSocket(this.remoteNodeInfo.host, this.remoteNodeInfo.intercomPort);
+        return RemoteRepository.writeRequest(connection, request);
+    }
 
-                requestWriter.writeRequest(request);
+    @Override
+    public String toString() {
+        return "RemoteIntercomRepository{" +
+                "remoteNodeInfo=" + remoteNodeInfo +
+                '}';
+    }
 
-                ResponseReader responseReader = new ResponseReader(connection);
-                Response response = null;
-                do {
-                    try {
-                        response = responseReader.readResponse();
-                        // send 0
-                    } catch (NonEqualChecksumException e) {
-                        e.printStackTrace();
-                        // send 1
-                    }
-                } while (response == null);
-
-                subscriber.onSuccess(response);
-            } catch (IOException e) {
-                e.printStackTrace();
-                subscriber.onError(e);
-            }
-        });
+    private static Socket getSocket(String host, int port) {
+        try {
+            return new Socket(host, port);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
